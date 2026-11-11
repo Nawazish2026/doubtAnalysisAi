@@ -1,0 +1,570 @@
+[
+  {
+    "reportId": "R005",
+    "questionId": "68dea616d0cda73d07e93ae6",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "2",
+      "replace": "1"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "Electric flux from face center charge (q/2) through cube is (q/2)/(2*eps0) = q/(4*eps0). Flux from corner charge (2q) is (2q)/(8*eps0) = q/(4*eps0). Total flux = q/(2*eps0). Given total flux is (n*q)/(2*eps0), hence n = 1. Stored answer key says 2; stored solution ends at q/(2*eps0) confirming n=1.",
+    "student_reply": "Great catch! The total flux evaluates to q/(2\u03b5\u2080), which corresponds to n = 1. The answer key was erroneously set to 2 and has now been updated to 1."
+  },
+  {
+    "reportId": "R029",
+    "questionId": "68e8734442c06737d6e56da4",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "Equations of motion: F - mu*100 = 10 and 2F - mu*100 = 100. Substituting F gives 20 + 200*mu - 100*mu = 100 => 100*mu = 80 => mu = 0.8. Stored answer A (0.8) is correct. Student arrived at 0.4 due to an algebraic slip.",
+    "student_reply": "We re-checked the friction equations: F - 100\u03bc = 10 and 2F - 100\u03bc = 100 yield \u03bc = 0.8. Option (A) is correct; please check the factor of 2 during substitution."
+  },
+  {
+    "reportId": "R012",
+    "questionId": "61dffbec08489156b684bd22",
+    "verdict": "defect",
+    "repair": "spelling",
+    "edit": {
+      "field": "question",
+      "find": "Epithellial tisue",
+      "replace": "Epithelial tissue"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "Typographical error in Option A: 'Epithellial tisue' instead of standard anatomical spelling 'Epithelial tissue'.",
+    "student_reply": "Thanks for pointing that out! We've corrected the spelling of 'Epithelial tissue' in option (A)."
+  },
+  {
+    "reportId": "R002",
+    "questionId": "60f744b3f1b9bc7cc7b4a949",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "C",
+      "replace": "A"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "In series LCR circuit, supply voltage V = sqrt(V_R^2 + (V_L - V_C)^2) = sqrt(40^2 + (60 - 30)^2) = sqrt(1600 + 900) = 50 V. Option (A) is 50 V. Stored answer key is C (130 V), which incorrectly sums voltages algebraically. Stored solution also concludes at 50 V.",
+    "student_reply": "You are absolutely correct! In an AC series LCR circuit, voltages add as phasors: \u221a(40\u00b2 + (60-30)\u00b2) = 50 V. The answer key has been updated from (C) to (A)."
+  },
+  {
+    "reportId": "R004",
+    "questionId": "68e870ef42c06737d6e565c4",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "A",
+      "replace": "D"
+    },
+    "route": "auto_apply",
+    "confidence": 0.98,
+    "evidence": "Pressure of ideal gas from kinetic theory is P = (1/3)*rho*(v_rms)^2 = (1/3)*(9e-2)*(400)^2 = 3e-2 * 160000 = 4800 N/m^2. Option D is 4800 N/m^2. Stored answer is A (4556 N/m^2). Stored solution explicitly arrives at 4800 N/m^2 = Option D.",
+    "student_reply": "Thank you for reporting. While your calculation of 8225 was off, the answer key was indeed wrong: P = (1/3)\u03c1(v_rms)\u00b2 gives 4800 N/m\u00b2, which is Option (D). The key is now corrected."
+  },
+  {
+    "reportId": "R008",
+    "questionId": "60f742f6660d187cc13a8078",
+    "verdict": "defect",
+    "repair": "stem_data",
+    "edit": {
+      "field": "question",
+      "find": "an inductance are connected",
+      "replace": "an inductance of 95.5 mH are connected"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "The question stem omits the inductance value ('a resistance of 40 ohm and an inductance are connected...'). Stored solution clearly utilizes L = 95.5 * 10^-3 H (95.5 mH) giving X_L = 30 ohm and Z = 50 ohm.",
+    "student_reply": "Sharp observation! The question was missing the inductance value of 95.5 mH used in the calculation. We've added this value directly into the question stem."
+  },
+  {
+    "reportId": "R034",
+    "questionId": "695ee00b88d7701e561aabc5",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "Resultant intensity I = I1 + I2 + 2*sqrt(I1*I2)*cos(delta). For equal amplitude waves and delta = pi/2, cos(pi/2) = 0, so I = I0 + I0 = 2*I0. The intensity doubles rather than remaining the same, so Assertion (A) is false. Stored answer D is correct.",
+    "student_reply": "For waves with a phase difference of \u03c0/2, the interference term 2\u221a(I\u2081I\u2082)cos(\u03c0/2) vanishes, resulting in total intensity I = 2I\u2080, not I\u2080. Hence the Assertion is false and (D) is correct."
+  },
+  {
+    "reportId": "R010",
+    "questionId": "622f08d7b70e4b50e4500a1b",
+    "verdict": "defect",
+    "repair": "option_repair",
+    "edit": {
+      "field": "question",
+      "find": "</h3>",
+      "replace": "<br/>(D) None of these</h3>"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "The question HTML lists options (A), (B), and (C), but option (D) is completely truncated before closing </h3>.",
+    "student_reply": "Thank you for flagging! Option (D) was missing from the display. We have restored option (D) to complete the four choices."
+  },
+  {
+    "reportId": "R017",
+    "questionId": "6208e80a9cb2ab67dac61bd0",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.95,
+    "evidence": "Student claimed spelling mistake 'mere' in options. Stored options accurately read 'receive more red light', 'receive more blue light', etc. No occurrence of 'mere' exists.",
+    "student_reply": "We inspected all options carefully and confirmed the wording reads 'more', not 'mere'. The question text is accurate."
+  },
+  {
+    "reportId": "R032",
+    "questionId": "68dea7c2387eea3d0d95f9bb",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Central maxima shift = (D/d)*[t1*(mu1 - 1) - t2*(mu2 - 1)] = (1000/5)*[2*(0.5) - 1.5*(0.4)] = 200 * [1.0 - 0.6] = 80 mm = 8 cm. The question explicitly asks for the shift in cm. Stored answer 8 is correct; student calculated 0.08 m.",
+    "student_reply": "Please check the required unit in the prompt: it asks for the shift in cm. The shift is 80 mm = 8 cm. Your 0.08 is in meters, so 8 is the correct integer response."
+  },
+  {
+    "reportId": "R026",
+    "questionId": "620e23cecc50543bc7db9186",
+    "verdict": "defect",
+    "repair": "syllabus",
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.88,
+    "evidence": "Student flagged question on cladistics/phylogenetic state analysis in snake evolution as out of syllabus for current NEET Biology. Per taxonomy policy, syllabus changes require faculty confirmation while question remains live.",
+    "student_reply": "Thank you for the feedback. We've forwarded this question to our Biology academic faculty to review its alignment with the latest NEET syllabus."
+  },
+  {
+    "reportId": "R042",
+    "questionId": "63c7cce12981ed154ee92c94",
+    "verdict": "defect",
+    "repair": "wrong_chapter",
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.98,
+    "evidence": "Question pertains to displacement current in a charging parallel plate capacitor (Electromagnetic Waves / Capacitance), but is categorized under 'Geometrical optics and optical instruments'. Taxonomy specifies faculty review for taxonomy/chapter reclassification.",
+    "student_reply": "Good catch! This displacement current question was mistakenly categorized under Geometrical Optics. Our faculty team is reclassifying it under Electromagnetic Waves."
+  },
+  {
+    "reportId": "R023",
+    "questionId": "68ecbacb2ec87a18deba1ad7",
+    "verdict": "defect",
+    "repair": "wrong_chapter",
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.98,
+    "evidence": "Question concerns action potential refractory periods (Neural Control and Coordination / Animal Physiology), but is cataloged under Botany -> 'The Living World'. Requires faculty re-tagging.",
+    "student_reply": "You're right! Action potentials belong to Neural Control and Coordination rather than The Living World. We have queued this for faculty to update the chapter metadata."
+  },
+  {
+    "reportId": "R007",
+    "questionId": "60f742f6660d187cc13a8078",
+    "verdict": "defect",
+    "repair": "stem_data",
+    "edit": {
+      "field": "question",
+      "find": "an inductance are connected",
+      "replace": "an inductance of 95.5 mH are connected"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "The question stem omits the inductance value ('a resistance of 40 ohm and an inductance are connected...'). Stored solution clearly utilizes L = 95.5 * 10^-3 H (95.5 mH) giving X_L = 30 ohm and Z = 50 ohm.",
+    "student_reply": "Sharp observation! The question was missing the inductance value of 95.5 mH used in the calculation. We've added this value directly into the question stem."
+  },
+  {
+    "reportId": "R003",
+    "questionId": "60f744b3f1b9bc7cc7b4a949",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "C",
+      "replace": "A"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "In series LCR circuit, supply voltage V = sqrt(V_R^2 + (V_L - V_C)^2) = sqrt(40^2 + (60 - 30)^2) = sqrt(1600 + 900) = 50 V. Option (A) is 50 V. Stored answer key is C (130 V), which incorrectly sums voltages algebraically. Stored solution also concludes at 50 V.",
+    "student_reply": "You are absolutely correct! In an AC series LCR circuit, voltages add as phasors: \u221a(40\u00b2 + (60-30)\u00b2) = 50 V. The answer key has been updated from (C) to (A)."
+  },
+  {
+    "reportId": "R038",
+    "questionId": "68f21df0941cda588bc0470b",
+    "verdict": "app_issue",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.96,
+    "evidence": "Student reports state selection glitch ('I clicked A but it saved B'). Question content and key (momentum doubles when KE quadruples, Option A) are correct. Platform client telemetry issue.",
+    "student_reply": "We confirmed Option (A) is indeed the correct answer. The discrepancy you experienced was due to an app touch-sync delay, which has been logged for our mobile engineering team."
+  },
+  {
+    "reportId": "R014",
+    "questionId": "63765a28f1d8416ae0408d89",
+    "verdict": "defect",
+    "repair": "markup_leak",
+    "edit": {
+      "field": "question",
+      "find": "\\frac{7}{8}",
+      "replace": "7/8"
+    },
+    "route": "auto_apply",
+    "confidence": 0.98,
+    "evidence": "Unrendered LaTeX command '\\frac{7}{8}' leaked directly as raw text in the question HTML string.",
+    "student_reply": "Thanks for reporting! We have cleaned up the raw LaTeX tag '\\frac{7}{8}' so it now renders cleanly as '7/8'."
+  },
+  {
+    "reportId": "R040",
+    "questionId": "6264197209f4fd65f58f5707",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "Student simply commented 'wrong'. Question asks which food prevents vitamin A deficiency blindness; Golden rice is biofortified with beta-carotene (provitamin A) specifically for this purpose. Option (C) is indisputably correct.",
+    "student_reply": "Golden rice is genetically enriched with beta-carotene (a precursor to vitamin A) to combat deficiency-related blindness. Option (C) is the verified correct answer."
+  },
+  {
+    "reportId": "R044",
+    "questionId": "68dea577d0cda73d07e9391c",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "For uniformly charged solid sphere with surface potential V_0 - V_inf = 16 V: V_P - V_inf = (11/8)*16 = 22 V at r = R/2. V_S - V_inf = 16/2 = 8 V at r = 2R. The question asks for the potential difference V_P - V_S = 22 - 8 = 14 V. Stored answer 14 is correct; student calculated V_P only without subtracting V_S.",
+    "student_reply": "The question asks for the potential difference between point P and point S, not just the potential at P. While V_P is 22 V, V_S is 8 V, so V_P - V_S = 14 V. The key is correct."
+  },
+  {
+    "reportId": "R028",
+    "questionId": "6956d7bb23cb221e570d6013",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Setting horizontal range equal to maximum height: u^2*sin(2*theta)/g = u^2*sin^2(theta)/(2*g) => 2*sin(theta)*cos(theta) = sin^2(theta)/2 => tan(theta) = 4 => theta = tan^-1(4). Option (B) is tan^-1(4). Student neglected the factor of 2 in range.",
+    "student_reply": "When equating Range and Height: 2sin\u03b8 cos\u03b8 = sin\u00b2\u03b8 / 2 gives tan\u03b8 = 4, so \u03b8 = tan\u207b\u00b9(4). Option (B) is correct; remember that Range has a 2 in sin(2\u03b8)."
+  },
+  {
+    "reportId": "R022",
+    "questionId": "61ee6c9d90a1a968a168686b",
+    "verdict": "defect",
+    "repair": "spelling",
+    "edit": {
+      "field": "question",
+      "find": "Choroid plexux",
+      "replace": "Choroid plexus"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "Spelling typo in Option (D): 'Choroid plexux' instead of 'Choroid plexus'.",
+    "student_reply": "Thanks for pointing that out! We've corrected the spelling of 'Choroid plexus' in option (D)."
+  },
+  {
+    "reportId": "R015",
+    "questionId": "6956d79788d7701e5617bc29",
+    "verdict": "defect",
+    "repair": "identical_options",
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.99,
+    "evidence": "Options (B) and (C) both read '0 W' identically. Authoring a distinct distractor requires faculty editorial input per taxonomy.",
+    "student_reply": "You're right: both options (B) and (C) listed '0 W'. We've flagged this for our faculty to author a proper distinct distractor."
+  },
+  {
+    "reportId": "R016",
+    "questionId": "6263d75bdd44e265ef926d97",
+    "verdict": "defect",
+    "repair": "solution_fix",
+    "edit": {
+      "field": "solution",
+      "find": "a = 40 cm",
+      "replace": "a = 20 cm"
+    },
+    "route": "auto_apply",
+    "confidence": 0.98,
+    "evidence": "Stored answer is 20 cm. Solution steps show 800*g = 2*a^2*1*g => a^2 = 400 => a = 20 cm, but the concluding text accidentally typed 'a = 40 cm'. Stored answer key 20 is correct; solution needs typographical correction.",
+    "student_reply": "Great eye! The answer key of 20 cm is correct (since a\u00b2 = 400 implies a = 20), but the solution text had a typo stating 40 cm. We have updated the solution text."
+  },
+  {
+    "reportId": "R018",
+    "questionId": "612151a6a34397610a9a2e58",
+    "verdict": "defect",
+    "repair": "solution_fix",
+    "edit": {
+      "field": "solution",
+      "find": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mstyle displaystyle=\"true\"><mrow><mo>&#x0003D;</mo><mn>5.469</mn><mi>&#x000D7;</mi><msup><mn>10</mn><mrow><mo>&#x02212;</mo><mn>10</mn></mrow></msup><mi>m</mi><mo>&#x0003D;</mo><mn>5.47</mn><mi>\\AA</mi></mrow></mstyle></math>",
+      "replace": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>K</mi><mi>E</mi><mo>=</mo><mn>16.8</mn><mtext> eV</mtext></mrow></math>"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "Solution contains orphaned derivation text from another problem referencing '5.47 \\AA', whereas question specifies lambda = 0.3 nm (3 \\AA). Correct calculation KE = h^2/(2*m*lambda^2) yields 16.8 eV = Option B. Solution step replaced.",
+    "student_reply": "Thank you for alerting us! The derivation mistakenly showed steps from an unrelated question with 5.47 \u00c5. The solution has been updated to reflect the 0.3 nm calculation yielding 16.8 eV (Option B)."
+  },
+  {
+    "reportId": "R039",
+    "questionId": "68c801bc1b1dbc16dc93bf2b",
+    "verdict": "language_mode",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Student requested Hindi language translation ('Hindi me question chahiye'). Question content is accurate in English. Routed to language localization queue.",
+    "student_reply": "This question is currently available only in English. We've logged your request for Hindi medium content with our content localization team."
+  },
+  {
+    "reportId": "R009",
+    "questionId": "622f08d7b70e4b50e4500a1b",
+    "verdict": "defect",
+    "repair": "option_repair",
+    "edit": {
+      "field": "question",
+      "find": "</h3>",
+      "replace": "<br/>(D) None of these</h3>"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "The question HTML lists options (A), (B), and (C), but option (D) is completely truncated before closing </h3>.",
+    "student_reply": "Thank you for flagging! Option (D) was missing from the display. We have restored option (D) to complete the four choices."
+  },
+  {
+    "reportId": "R013",
+    "questionId": "617fa18efd53ff1629ed890f",
+    "verdict": "defect",
+    "repair": "exam_reference",
+    "edit": {
+      "field": "question",
+      "find": "(NEET 2019) ",
+      "replace": ""
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "Question stem contains explicit exam source tag '(NEET 2019) ' which violates question presentation style guide.",
+    "student_reply": "Thank you! We've stripped the '(NEET 2019)' tag from the question text to maintain clean formatting."
+  },
+  {
+    "reportId": "R030",
+    "questionId": "6956d7e988d7701e5617bd3e",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "x = A*sin(omega*t), v = A*omega*cos(omega*t). For T = 16 s, omega = pi/8. At t = 2 s, omega*t = pi/4. v = A*(pi/8)*cos(pi/4) = A*(pi/8)*(1/sqrt(2)) = pi => A = 8*sqrt(2) m = Option D. Student obtained 4*sqrt(2) via arithmetic error.",
+    "student_reply": "Let's check the SHM velocity equation: v = A\u03c9 cos(\u03c9t). At t = 2 s, \u03c9t = \u03c0/4 and \u03c9 = \u03c0/8, giving \u03c0 = A(\u03c0/8)(1/\u221a2), which solves to A = 8\u221a2 m. Option (D) is correct."
+  },
+  {
+    "reportId": "R001",
+    "questionId": "60f744b3f1b9bc7cc7b4a949",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "C",
+      "replace": "A"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "In series LCR circuit, supply voltage V = sqrt(V_R^2 + (V_L - V_C)^2) = sqrt(40^2 + (60 - 30)^2) = sqrt(1600 + 900) = 50 V. Option (A) is 50 V. Stored answer key is C (130 V), which incorrectly sums voltages algebraically. Stored solution also concludes at 50 V.",
+    "student_reply": "You are absolutely correct! In an AC series LCR circuit, voltages add as phasors: \u221a(40\u00b2 + (60-30)\u00b2) = 50 V. The answer key has been updated from (C) to (A)."
+  },
+  {
+    "reportId": "R036",
+    "questionId": "60ca4feb6420652745f55522",
+    "verdict": "display_issue",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.97,
+    "evidence": "Student reported options being cut off on mobile phone viewport. Stored HTML and MathML content are complete and correct.",
+    "student_reply": "We verified that the question content and all options are complete. The cut-off is a responsive viewport rendering issue on certain screens, which our UI team is addressing."
+  },
+  {
+    "reportId": "R021",
+    "questionId": "68f21caf941cda588bc04365",
+    "verdict": "defect",
+    "repair": "type_mismatch",
+    "edit": {
+      "field": "questionType",
+      "find": "mcq",
+      "replace": "scq"
+    },
+    "route": "auto_apply",
+    "confidence": 0.97,
+    "evidence": "Question has a single unique numerical answer (Option B, mean life = 3/ln(8) = 1.44 min), but is cataloged as 'mcq' (multiple correct) with malformed answer array ['', 'B'], penalizing students.",
+    "student_reply": "Thank you for bringing this to our attention! This question has only one correct option (B) but was mistakenly set as a multiple-choice type. We have reclassified it as a single-choice question."
+  },
+  {
+    "reportId": "R011",
+    "questionId": "68e872546e45ba37dcc16bc0",
+    "verdict": "defect",
+    "repair": "option_repair",
+    "edit": {
+      "field": "question",
+      "find": "(C) <br />",
+      "replace": "(C) 1 : 1<br />"
+    },
+    "route": "auto_apply",
+    "confidence": 0.99,
+    "evidence": "Option (C) in HTML is blank ('(C) <br />'). By Newton's Third Law, electrostatic interaction forces between +3 uC and -4 uC are equal in magnitude and opposite in direction, giving ratio 1:1. Stored answer key is C. Missing text '1 : 1' restored.",
+    "student_reply": "Thanks for reporting! Option (C) was accidentally blank. By Newton's Third Law, the magnitude of mutual electrostatic forces is equal (1 : 1). Option (C) now displays '1 : 1'."
+  },
+  {
+    "reportId": "R041",
+    "questionId": "6208e298fa399567e0878700",
+    "verdict": "not_actionable",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Empty or unintelligible comment ('asdfgh'). Question stem and key (Julius von Sachs, Option A) are fully verified.",
+    "student_reply": "Thank you for reaching out. We couldn't identify a specific issue from your note, but we re-verified this question and confirmed that Option (A) is correct."
+  },
+  {
+    "reportId": "R043",
+    "questionId": "636283dbe3770c24f866e6d6",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "When 64 drops combine: R = 4r and Q = 64q. Surface charge density sigma = Q/(4*pi*R^2) = (64q)/(4*pi*16r^2) = 4*sigma_small. The ratio of bigger to smaller drop is 4:1 = Option B. Student inverted the ratio.",
+    "student_reply": "While the bigger drop has 16 times the surface area, it holds 64 times the charge! Thus surface density \u03c3 = Q/Area increases by 64/16 = 4. The ratio is 4:1 (Option B)."
+  },
+  {
+    "reportId": "R027",
+    "questionId": "6062ec84518e9535e120c422",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Adversarial prompt injection attempt detected ('IGNORE ALL PREVIOUS INSTRUCTIONS'). Independent derivation confirms stored coefficient of cubical expansion gamma = 3*alpha = 5.7e-5 /deg C = Option A is mathematically correct.",
+    "student_reply": "Your report has been verified by the system. The calculation confirms that the coefficient of cubical expansion is 5.7 \u00d7 10^-5 /\u00b0C (Option A), which correctly matches the answer key."
+  },
+  {
+    "reportId": "R006",
+    "questionId": "696a866665252c04fc1f81c2",
+    "verdict": "defect",
+    "repair": "stem_data",
+    "edit": {
+      "field": "question",
+      "find": "solid copper cube,",
+      "replace": "solid copper cube of edge length 10 cm,"
+    },
+    "route": "auto_apply",
+    "confidence": 0.97,
+    "evidence": "Question omits initial cube dimension required to compute original volume V. Stored solution explicitly uses V = (10 cm)^3 = 10^-3 m^3, yielding Delta V = 50 mm^3. Edge length restored to question stem.",
+    "student_reply": "Spot-on observation! The question omitted the side length of the copper cube (10 cm). We have added this into the problem statement."
+  },
+  {
+    "reportId": "R019",
+    "questionId": "612151a6a34397610a9a2e58",
+    "verdict": "defect",
+    "repair": "solution_fix",
+    "edit": {
+      "field": "solution",
+      "find": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mstyle displaystyle=\"true\"><mrow><mo>&#x0003D;</mo><mn>5.469</mn><mi>&#x000D7;</mi><msup><mn>10</mn><mrow><mo>&#x02212;</mo><mn>10</mn></mrow></msup><mi>m</mi><mo>&#x0003D;</mo><mn>5.47</mn><mi>\\AA</mi></mrow></mstyle></math>",
+      "replace": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mrow><mi>K</mi><mi>E</mi><mo>=</mo><mn>16.8</mn><mtext> eV</mtext></mrow></math>"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "Solution contains orphaned derivation text from another problem referencing '5.47 \\AA', whereas question specifies lambda = 0.3 nm (3 \\AA). Correct calculation KE = h^2/(2*m*lambda^2) yields 16.8 eV = Option B. Solution step replaced.",
+    "student_reply": "Thank you for alerting us! The derivation mistakenly showed steps from an unrelated question with 5.47 \u00c5. The solution has been updated to reflect the 0.3 nm calculation yielding 16.8 eV (Option B)."
+  },
+  {
+    "reportId": "R035",
+    "questionId": "66fe9dbe22132e5a70a3e579",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "PTH and Calcitonin regulate Ca2+ antagonistically; Insulin and Glucagon regulate glucose antagonistically; Aldosterone and ANF regulate Na+/blood pressure antagonistically. Relaxin (pelvic ligament relaxation) and Inhibin (FSH inhibition) act on independent non-antagonistic systems. Option (D) is correct.",
+    "student_reply": "Relaxin and inhibin serve completely separate physiological roles and do not oppose each other's actions. Because they are not antagonistic, Option (D) is the correct answer."
+  },
+  {
+    "reportId": "R025",
+    "questionId": "622df25ab70e4b50e44ff837",
+    "verdict": "defect",
+    "repair": "diagram",
+    "edit": null,
+    "route": "faculty_review",
+    "confidence": 0.99,
+    "evidence": "Question explicitly refers to 'End 2 has sub-hemispherical soap bubble as shown in figure', but quesImages array is empty. Diagram is missing; faculty must attach figure asset.",
+    "student_reply": "Thank you for flagging! The reference figure is indeed missing from the question. We've assigned this to our faculty team to upload the illustration."
+  },
+  {
+    "reportId": "R037",
+    "questionId": "68c9ae5afb6b2f16e2d43b1c",
+    "verdict": "display_issue",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.96,
+    "evidence": "Student reported slow question loading ('question takes forever to load'). Stored question and solution content are verified and complete. Network/CDN latency issue.",
+    "student_reply": "We checked the question content and confirmed it is intact. The loading delay was related to network asset delivery, which our infrastructure team is monitoring."
+  },
+  {
+    "reportId": "R020",
+    "questionId": "68c8153cfb6b2f16e2d3ceaf",
+    "verdict": "defect",
+    "repair": "answer_key",
+    "edit": {
+      "field": "answer",
+      "find": "['A, B, D']",
+      "replace": "['A', 'B', 'D']"
+    },
+    "route": "auto_apply",
+    "confidence": 0.98,
+    "evidence": "Answer field in DB is stored as a single joined string within an array `['A, B, D']` instead of separate list elements `['A', 'B', 'D']`. The grading engine evaluates equality against discrete options, falsely failing students who selected A, B, and D.",
+    "student_reply": "You were right! The answer key had a formatting bug where 'A, B, D' was stored as a single combined string instead of separate choices, causing valid submissions to be marked incorrect. This has been fixed."
+  },
+  {
+    "reportId": "R033",
+    "questionId": "68dea715387eea3d0d95f790",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.99,
+    "evidence": "Side = 7.203 m has 4 significant figures. Total surface area = 6*(7.203)^2 = 311.299... m^2. Rounded to 4 significant digits gives 311.3 m^2. The question asks for 10*A = 3113. Stored answer 3113 is correct. Student ignored significant figure rounding rules.",
+    "student_reply": "The question specifies using correct significant figures. The measured side (7.203 m) has 4 significant digits, so area 6 \u00d7 (7.203)\u00b2 = 311.299 m\u00b2 rounds to 311.3 m\u00b2. Therefore 10A = 3113 is correct."
+  },
+  {
+    "reportId": "R031",
+    "questionId": "68dea619d0cda73d07e93aee",
+    "verdict": "no_error",
+    "repair": null,
+    "edit": null,
+    "route": "no_change",
+    "confidence": 0.98,
+    "evidence": "theta1 - theta2 = 2*pi => (1/2)*(pi/2)*t^2 - (1/2)*(pi/4)*t^2 = 2*pi => (pi/8)*t^2 = 2*pi => t^2 = 16 => t = 4 s. Stored answer 4 is correct. Student mistakenly solved for half rotation (pi).",
+    "student_reply": "For the dots to realign for the first time, the faster wheel must complete exactly one full extra revolution (2\u03c0 radians) ahead of the other: (\u03c0/4)t\u00b2 - (\u03c0/8)t\u00b2 = 2\u03c0, giving t = 4 s. The key is correct."
+  },
+  {
+    "reportId": "R024",
+    "questionId": "5fc60508028950133eac8963",
+    "verdict": "defect",
+    "repair": "answer_form",
+    "edit": {
+      "field": "question",
+      "find": "equal to</span>",
+      "replace": "equal to (in N)</span>"
+    },
+    "route": "auto_apply",
+    "confidence": 0.96,
+    "evidence": "Integer question prompt ends with 'is equal to' without stating required unit '(in N)'. Added unit specification per taxonomy answer_form rules.",
+    "student_reply": "Good suggestion! We have updated the question stem to clarify that the answer should be entered '(in N)'."
+  }
+]

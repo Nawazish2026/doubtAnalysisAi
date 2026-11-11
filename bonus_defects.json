@@ -1,0 +1,26 @@
+[
+  {
+    "questionId": "68dea87d387eea3d0d95fbe3",
+    "defect_type": "markup_leak",
+    "subject": "Physics",
+    "chapter": "Electrostatics",
+    "detail": "Unescaped raw MathML tags (<mspace linebreak=\"newline\">) leaking in options HTML text.",
+    "surgical_fix": {
+      "field": "question",
+      "find": "<mspace linebreak=\"newline\">",
+      "replace": ""
+    }
+  },
+  {
+    "questionId": "68dea657387eea3d0d95f54a",
+    "defect_type": "notation",
+    "subject": "Physics",
+    "chapter": "Geometrical optics and optical instruments",
+    "detail": "OCR typo in solution text: 'P_{eqch}' and 'P_{eqcu}' instead of 'P_{each}'.",
+    "surgical_fix": {
+      "field": "solution",
+      "find": "P_{eqch}",
+      "replace": "P_{each}"
+    }
+  }
+]
