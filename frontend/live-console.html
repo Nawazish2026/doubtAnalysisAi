@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acadza - Live Faculty Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Nunito,sans-serif;background:#070d1e;color:#e5e7eb}
+    h1,h2,h3,button{font-family:Lexend,sans-serif}
+    .panel{background:#0f1a36;border:1px solid #1f3468;border-radius:18px}
+    .field{background:#070d1e;border:1px solid #2b478a;border-radius:10px;padding:9px 11px;color:#fff;width:100%}
+    .btn{border-radius:999px;padding:9px 15px;font-size:12px;font-weight:700}
+  </style>
+</head>
+<body class="min-h-screen">
+  <header class="border-b border-blue-950/80 sticky top-0 bg-[#070d1e]/95 backdrop-blur z-10">
+    <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
+      <div><div class="text-xs text-blue-300 font-bold tracking-widest uppercase">Acadza</div><h1 class="text-xl font-bold">Live Faculty Review</h1></div>
+      <div class="flex items-center gap-3"><span id="connection" class="text-xs text-slate-400">Not signed in</span><button id="signout" class="btn bg-slate-700 hidden">Sign out</button></div>
+    </div>
+  </header>
+  <main class="max-w-7xl mx-auto px-5 py-7 space-y-6">
+    <section id="login-panel" class="panel max-w-md mx-auto p-6 space-y-4">
+      <h2 class="text-lg font-bold">Faculty sign in</h2>
+      <p class="text-sm text-slate-400">Use an account whose profile has the faculty or admin role.</p>
+      <form id="login-form" class="space-y-3">
+        <input id="email" class="field" type="email" placeholder="Faculty email" autocomplete="username" required>
+        <input id="password" class="field" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button class="btn bg-blue-600 w-full" type="submit">Sign in</button>
+      </form>
+      <p id="login-error" class="text-sm text-rose-300" role="alert"></p>
+    </section>
+    <section id="app-panel" class="hidden space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="panel p-4"><div class="text-xs text-slate-400">Open reports</div><div id="metric-open" class="text-2xl font-bold">0</div></div>
+        <div class="panel p-4"><div class="text-xs text-slate-400">Proposals pending</div><div id="metric-proposals" class="text-2xl font-bold">0</div></div>
+        <div class="panel p-4"><div class="text-xs text-slate-400">Connected as</div><div id="metric-user" class="text-sm font-bold truncate">-</div></div>
+        <div class="panel p-4"><div class="text-xs text-slate-400">Last refresh</div><div id="metric-refresh" class="text-sm font-bold">-</div></div>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-lg font-bold">Review queue</h2>
+        <button id="refresh" class="btn bg-slate-700">Refresh queue</button>
+      </div>
+      <p id="page-error" class="text-sm text-rose-300" role="alert"></p>
+      <div id="queue" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+      <section class="panel p-5 space-y-3">
+        <div class="flex items-center justify-between"><h2 class="font-bold">Recent audit history</h2><button id="refresh-audit" class="btn bg-slate-700">Refresh</button></div>
+        <div id="audit" class="space-y-2 text-xs text-slate-300">Sign in to load audit history.</div>
+      </section>
+    </section>
+  </main>
+  <script src="./config.js"></script>
+  <script type="module" src="./js/live-console-page.js"></script>
+</body>
+</html>
