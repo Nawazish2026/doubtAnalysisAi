@@ -4,8 +4,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# backend/app/config.py -> repository root
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+# When Vercel's Root Directory is set to "backend", this resolves to the
+# deployed backend root. It also works in a local repository checkout.
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
 
     @property
     def taxonomy_path(self) -> Path:
-        return PROJECT_ROOT / "data" / "taxonomy.json"
+        return BACKEND_ROOT / "data" / "taxonomy.json"
 
 
 @lru_cache
