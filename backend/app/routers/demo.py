@@ -86,7 +86,23 @@ async def _record_action(
     action: str,
     reason: str | None,
     details: dict,
+    student_reply: str | None = None,
 ) -> None:
+    saved_details = {**details}
+    if student_reply is not None:
+        saved_details["student_reply"] = student_reply
+    if student_reply is not None:
+        await db.execute(
+            """update public.triage_results
+               set student_reply = $2
+               where id = (
+                   select id from public.triage_results
+                   where report_id = $1
+                   order by created_at desc limit 1
+               )""",
+            report["id"],
+            student_reply,
+        )
     await db.execute(
         """
         insert into public.demo_review_actions
@@ -97,7 +113,7 @@ async def _record_action(
         report["question_id"],
         action,
         reason,
-        details,
+        saved_details,
     )
     await db.execute(
         """
@@ -108,7 +124,7 @@ async def _record_action(
         str(report["id"]),
         "public_demo_" + action,
         {"status_action": action, "question_id": report["question_id"]},
-        {"external_report_id": report["external_report_id"], **details},
+        {"external_report_id": report["external_report_id"], **saved_details},
     )
 
 
@@ -215,7 +231,8 @@ async def record_demo_decision(
             )
             for report in reports:
                 await _record_action(
-                    db, report=report, action="rejected", reason=reason, details={}
+                    db, report=report, action="rejected", reason=reason, details={},
+                    student_reply=body.student_reply,
                 )
             return {"ok": True, "action": "rejected", "reports_updated": len(reports)}
 
@@ -269,6 +286,7 @@ async def record_demo_decision(
                     action="edited",
                     reason=reason,
                     details={"proposal_id": proposal["id"], "repair": repair, "edit": edit},
+                    student_reply=body.student_reply,
                 )
             return {
                 "ok": True,
@@ -369,6 +387,7 @@ async def record_demo_decision(
                         "before": before_value,
                         "after": after_value,
                     },
+                    student_reply=body.student_reply,
                 )
 
             return {
@@ -402,5 +421,6 @@ async def record_demo_decision(
             await _record_action(
                 db, report=report, action="approved", reason=reason,
                 details={"question_changed": False},
+                student_reply=body.student_reply,
             )
         return {"ok": True, "action": "approved", "reports_updated": len(reports), "question_changed": False}
