@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Acadza Report → Fix API",
     version="1.0.0",
-    description="Authenticated API for question reports, faculty review and audited corrections.",
+    description="Authenticated production API plus allowlisted public demo actions for the seeded fixture dataset.",
     lifespan=lifespan,
 )
 
