@@ -212,6 +212,17 @@ drop policy if exists audit_read_faculty on public.audit_logs;
 create policy audit_read_faculty on public.audit_logs for select to authenticated
 using (public.has_faculty_role());
 
+-- Browser clients use Realtime subscriptions only; RLS still limits visible rows.
+-- Mutations are performed by the trusted FastAPI service, not directly by the browser.
+grant select on public.profiles to authenticated;
+grant select on public.questions to authenticated;
+grant select on public.reports to authenticated;
+grant select on public.triage_results to authenticated;
+grant select on public.repair_proposals to authenticated;
+grant select on public.question_versions to authenticated;
+grant select on public.review_decisions to authenticated;
+grant select on public.audit_logs to authenticated;
+
 -- Enable database change events for Supabase Realtime. This is safe to rerun.
 do $$
 begin
