@@ -1,24 +1,42 @@
-"""
-Console Data Pre-processor
-Groups questions with their linked reports, triaged results, urgency scores,
-and diff previews for the Faculty Review Console.
-"""
-
 import json
+import re
+from pathlib import Path
 
-with open("acadza-report-fix/data/questions.json", "r", encoding="utf-8") as f:
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+
+def clean_html_colors(html):
+    if not html:
+        return ""
+    html = re.sub(r'color:\s*(#000000|#000|black);?', '', html, flags=re.IGNORECASE)
+    html = re.sub(r'style=[\"\']\s*[\"\']', '', html)
+    html = re.sub(r'<span\s*>', '<span>', html)
+    return html
+
+with open(PROJECT_DIR / "data/questions.json", "r", encoding="utf-8") as f:
     raw_questions = json.load(f)
     questions_by_id = {q["_id"]: q for q in raw_questions}
 
-with open("acadza-report-fix/data/reports.json", "r", encoding="utf-8") as f:
+with open(PROJECT_DIR / "data/reports.json", "r", encoding="utf-8") as f:
     reports = json.load(f)
 
-with open("acadza-report-fix/results.json", "r", encoding="utf-8") as f:
+with open(PROJECT_DIR / "results.json", "r", encoding="utf-8") as f:
     results = json.load(f)
 
 results_by_rid = {r["reportId"]: r for r in results}
+report_ids = {r["reportId"] for r in reports}
+missing_questions = {r["questionId"] for r in reports if r["questionId"] not in questions_by_id}
+missing_results = report_ids - results_by_rid.keys()
+unexpected_results = results_by_rid.keys() - report_ids
 
-# Group reports by questionId
+if missing_questions:
+    raise ValueError(f"Reports reference unknown questions: {sorted(missing_questions)}")
+if len(results_by_rid) != len(results):
+    raise ValueError("results.json contains duplicate report IDs")
+if missing_results:
+    raise ValueError(f"results.json is missing reports: {sorted(missing_results)}")
+if unexpected_results:
+    raise ValueError(f"results.json contains unknown reports: {sorted(unexpected_results)}")
+
 reports_by_qid = {}
 for r in reports:
     qid = r["questionId"]
@@ -27,25 +45,16 @@ for r in reports:
 console_items = []
 
 for qid, q_reports in reports_by_qid.items():
-    q = questions_by_id.get(qid, {})
+    q = questions_by_id[qid]
     qtype = q.get("questionType", "")
     content = q.get(qtype, {})
     
-    # Grab the primary triage record (or aggregate)
     triage_records = [results_by_rid[r["reportId"]] for r in q_reports if r["reportId"] in results_by_rid]
     primary_triage = triage_records[0] if triage_records else {}
     
-    # Urgency scoring algorithm:
-    # 1. Multi-reports volume weight: each additional report adds 30 points
-    # 2. Defect category weight: answer_key = 50, stem_data = 40, identical_options/diagram = 45, spelling = 15
-    # 3. Route weight: faculty_review = 40 (blocking), auto_apply = 20, no_change = 0
-    urgency = 0
-    report_count = len(q_reports)
-    urgency += report_count * 25
-    
+    urgency = len(q_reports) * 25
     repair = primary_triage.get("repair")
     route = primary_triage.get("route")
-    verdict = primary_triage.get("verdict")
     
     if repair == "answer_key":
         urgency += 50
@@ -63,7 +72,6 @@ for qid, q_reports in reports_by_qid.items():
     elif route == "auto_apply":
         urgency += 20
 
-    # Before / After diff preparation
     edit = primary_triage.get("edit")
     before_text = ""
     after_text = ""
@@ -73,7 +81,8 @@ for qid, q_reports in reports_by_qid.items():
         target_field = edit.get("field", "")
         find_str = edit.get("find", "")
         replace_str = edit.get("replace", "")
-        original_val = content.get(target_field, "")
+        source = q if target_field == "questionType" else content
+        original_val = source.get(target_field, "")
         if target_field == "answer":
             before_text = str(original_val)
             after_text = str(replace_str)
@@ -88,11 +97,11 @@ for qid, q_reports in reports_by_qid.items():
         "chapter": q.get("chapter", "General"),
         "level": q.get("level", "MEDIUM"),
         "storedAnswer": content.get("answer"),
-        "rawQuestionHtml": content.get("question", ""),
-        "rawSolutionHtml": content.get("solution", ""),
+        "rawQuestionHtml": clean_html_colors(content.get("question", "")),
+        "rawSolutionHtml": clean_html_colors(content.get("solution", "")),
         "quesImages": content.get("quesImages", []),
         "solutionImages": content.get("solutionImages", []),
-        "reportCount": report_count,
+        "reportCount": len(q_reports),
         "urgencyScore": urgency,
         "reports": q_reports,
         "primaryTriage": primary_triage,
@@ -106,13 +115,9 @@ for qid, q_reports in reports_by_qid.items():
     }
     console_items.append(item)
 
-# Sort by urgency descending
 console_items.sort(key=lambda x: x["urgencyScore"], reverse=True)
 
-with open("acadza-report-fix/console_data.json", "w", encoding="utf-8") as f:
+with open(PROJECT_DIR / "console_data.json", "w", encoding="utf-8") as f:
     json.dump(console_items, f, indent=2)
 
-print(f"Preprocessed {len(console_items)} grouped question cases into acadza-report-fix/console_data.json")
-print("Top 5 most urgent cases:")
-for it in console_items[:5]:
-    print(f"- QID: {it['questionId'][:8]}.. | Urgency: {it['urgencyScore']} | Reports: {it['reportCount']} | Repair: {it['primaryTriage'].get('repair')} | Route: {it['primaryTriage'].get('route')}")
+print(f"Generated console_data.json with {len(console_items)} grouped questions")

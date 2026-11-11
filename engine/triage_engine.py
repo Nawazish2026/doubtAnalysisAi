@@ -1,20 +1,15 @@
-"""
-Acadza AI Triage & Repair Engine
-================================
-Head of AI Architecture Implementation
-
-This module processes incoming student error reports on JEE/NEET questions,
-applies multi-layer guardrails, clusters duplicate reports, verifies mathematical/STEM
-correctness independently, applies taxonomy rules strictly, generates surgical diffs,
-and routes each case safely (auto_apply vs faculty_review vs no_change).
-"""
-
 import json
 import re
-from typing import Dict, Any, List, Optional
+from pathlib import Path
+from typing import Dict, Any, List, Union
 
 class TriageEngine:
-    def __init__(self, questions_path: str, reports_path: str, taxonomy_path: str):
+    def __init__(
+        self,
+        questions_path: Union[str, Path],
+        reports_path: Union[str, Path],
+        taxonomy_path: Union[str, Path],
+    ):
         with open(questions_path, "r", encoding="utf-8") as f:
             self.raw_questions = json.load(f)
             self.questions = {q["_id"]: q for q in self.raw_questions}
@@ -24,7 +19,6 @@ class TriageEngine:
             self.taxonomy = json.load(f)
 
     def is_prompt_injection(self, text: str) -> bool:
-        """Layer 0: Adversarial Jailbreak / Prompt Injection Detector"""
         patterns = [
             r"ignore\s+(all\s+)?previous\s+instructions",
             r"you\s+are\s+(the\s+)?admin\s+bot",
@@ -37,35 +31,19 @@ class TriageEngine:
         return any(re.search(p, text_lower) for p in patterns)
 
     def is_gibberish(self, text: str) -> bool:
-        """Detect non-actionable gibberish comments"""
         clean = re.sub(r"[^a-zA-Z0-9]", "", text)
         if len(clean) < 3:
             return True
-        # repeated characters or keyboard mashing
         if re.match(r"^(asdf|qwer|zxcv|test|abc)", clean.lower()):
             return True
         return False
 
     def triage_all(self) -> List[Dict[str, Any]]:
-        """
-        Processes all reports and produces the standardized results list.
-        Each triage record follows:
-        {
-          "reportId": str,
-          "questionId": str,
-          "verdict": str,
-          "repair": Optional[str],
-          "edit": Optional[Dict[str, str]],
-          "route": str,
-          "confidence": float,
-          "evidence": str,
-          "student_reply": str
-        }
-        """
         results = []
         for r in self.reports:
             record = self.triage_single(r)
             self.validate_taxonomy(record)
+            self.validate_edit_applies(record)
             results.append(record)
         return results
 
@@ -73,12 +51,12 @@ class TriageEngine:
         rid = report["reportId"]
         qid = report["questionId"]
         comment = report["comment"].strip()
-        q = self.questions.get(qid, {})
+        if qid not in self.questions:
+            raise ValueError(f"Report {rid} references unknown question {qid}")
+        q = self.questions[qid]
         qtype = q.get("questionType", "")
-        q_content = q.get(qtype, {})
-        stored_ans = q_content.get("answer")
+        content = q.get(qtype, {})
 
-        # Layer 0: Prompt Injection / Adversarial Guard
         if self.is_prompt_injection(comment):
             return {
                 "reportId": rid,
@@ -92,7 +70,6 @@ class TriageEngine:
                 "student_reply": "Your report has been verified by the system. The calculation confirms that the coefficient of cubical expansion is 5.7 × 10^-5 /°C (Option A), which correctly matches the answer key."
             }
 
-        # Non-actionable comments
         if self.is_gibberish(comment) and rid == "R041":
             return {
                 "reportId": rid,
@@ -106,7 +83,6 @@ class TriageEngine:
                 "student_reply": "Thank you for reaching out. We couldn't identify a specific issue from your note, but we re-verified this question and confirmed that Option (A) is correct."
             }
 
-        # Specific deterministic evaluations based on independent STEM derivations
         if rid == "R005":
             return {
                 "reportId": rid,
@@ -592,50 +568,73 @@ class TriageEngine:
                 "student_reply": "Good suggestion! We have updated the question stem to clarify that the answer should be entered '(in N)'."
             }
 
-        # Fallback safety
-        return {
-            "reportId": rid,
-            "questionId": qid,
-            "verdict": "no_error",
-            "repair": None,
-            "edit": None,
-            "route": "no_change",
-            "confidence": 0.80,
-            "evidence": "Verified content and solution.",
-            "student_reply": "We have re-verified this question and confirmed that the current solution and key are accurate."
-        }
+        raise ValueError(f"No triage rule exists for report {rid}")
 
     def validate_taxonomy(self, record: Dict[str, Any]):
-        """Safety invariant checker against taxonomy.json"""
         verdict = record["verdict"]
         repair = record["repair"]
         route = record["route"]
         edit = record["edit"]
 
-        assert verdict in self.taxonomy["verdicts"], f"Invalid verdict: {verdict}"
+        if verdict not in self.taxonomy["verdicts"]:
+            raise ValueError(f"Invalid verdict: {verdict}")
+        if route not in {"auto_apply", "faculty_review", "no_change"}:
+            raise ValueError(f"Invalid route: {route}")
 
         if verdict != "defect":
-            assert repair is None, f"Non-defect verdict {verdict} cannot have repair {repair}"
-            assert route == "no_change", f"Non-defect verdict must route to no_change"
-            assert edit is None, f"Non-defect verdict cannot contain edits"
-        else:
-            assert repair in self.taxonomy["repairs"], f"Invalid repair: {repair}"
-            repair_def = self.taxonomy["repairs"][repair]
-            allowed_fields = repair_def["fields"]
-            auto_allowed = repair_def["auto"]
+            if repair is not None:
+                raise ValueError(f"Non-defect verdict {verdict} cannot have repair {repair}")
+            if route != "no_change":
+                raise ValueError(f"Non-defect verdict {verdict} must route to no_change")
+            if edit is not None:
+                raise ValueError(f"Non-defect verdict {verdict} cannot contain edits")
+            return
 
-            # Invariant: auto: false repairs CAN NEVER auto_apply
-            if not auto_allowed:
-                assert route == "faculty_review", f"Repair {repair} with auto:false cannot be {route}"
+        if repair not in self.taxonomy["repairs"]:
+            raise ValueError(f"Invalid repair: {repair}")
 
-            if edit:
-                field = edit.get("field")
-                assert field in allowed_fields, f"Field '{field}' not permitted for repair '{repair}' (allowed: {allowed_fields})"
+        repair_def = self.taxonomy["repairs"][repair]
+        auto_allowed = repair_def["auto"]
+        allowed_fields = repair_def["fields"]
+
+        if not auto_allowed and route != "faculty_review":
+            raise ValueError(f"Repair {repair} requires faculty_review")
+        if route == "no_change":
+            raise ValueError(f"Defect verdict {repair} cannot route to no_change")
+        if route == "auto_apply" and (not auto_allowed or edit is None):
+            raise ValueError(f"Repair {repair} is not eligible for auto_apply")
+
+        if edit is not None:
+            if not isinstance(edit, dict):
+                raise ValueError("Edit must be an object")
+            field = edit.get("field")
+            if field not in allowed_fields:
+                raise ValueError(
+                    f"Field '{field}' not permitted for repair '{repair}' "
+                    f"(allowed: {allowed_fields})"
+                )
+            if not isinstance(edit.get("find"), str) or not edit["find"]:
+                raise ValueError(f"Edit for repair {repair} must include a non-empty find string")
+            if not isinstance(edit.get("replace"), str):
+                raise ValueError(f"Edit for repair {repair} must include a replace string")
+
+    def validate_edit_applies(self, record: Dict[str, Any]):
+        edit = record["edit"]
+        if edit is None:
+            return
+
+        question = self.questions[record["questionId"]]
+        field = edit["field"]
+        source = question if field == "questionType" else question.get(question.get("questionType", ""), {})
+        current_value = source.get(field)
+        if current_value is None:
+            raise ValueError(f"Edit target field '{field}' is missing for report {record['reportId']}")
+        if edit["find"] not in str(current_value):
+            raise ValueError(
+                f"Edit find text does not occur in '{field}' for report {record['reportId']}"
+            )
 
     def run_bonus_mining(self) -> List[Dict[str, Any]]:
-        """
-        Bonus: Scan all questions that had NO student reports to detect latent defects.
-        """
         reported_qids = {r["questionId"] for r in self.reports}
         unreported_questions = [q for q in self.raw_questions if q["_id"] not in reported_qids]
         
@@ -647,7 +646,6 @@ class TriageEngine:
             q_text = content.get("question", "")
             sol_text = content.get("solution", "")
 
-            # Check 1: Markup leak (e.g. <mspace> tags leaking into text)
             if "<mspace" in q_text:
                 bonus_findings.append({
                     "questionId": qid,
@@ -658,7 +656,6 @@ class TriageEngine:
                     "surgical_fix": {"field": "question", "find": "<mspace linebreak=\"newline\">", "replace": ""}
                 })
 
-            # Check 2: Typo in solution notation / math
             if "P_{eqcu}" in sol_text or "P_{eqch}" in sol_text or "P_eqch" in sol_text or "eqch" in sol_text:
                 bonus_findings.append({
                     "questionId": qid,
@@ -672,17 +669,18 @@ class TriageEngine:
         return bonus_findings
 
 if __name__ == "__main__":
+    project_dir = Path(__file__).resolve().parents[1]
     engine = TriageEngine(
-        questions_path="acadza-report-fix/data/questions.json",
-        reports_path="acadza-report-fix/data/reports.json",
-        taxonomy_path="acadza-report-fix/data/taxonomy.json"
+        questions_path=project_dir / "data/questions.json",
+        reports_path=project_dir / "data/reports.json",
+        taxonomy_path=project_dir / "data/taxonomy.json"
     )
     results = engine.triage_all()
-    with open("acadza-report-fix/results.json", "w", encoding="utf-8") as f:
+    with open(project_dir / "results.json", "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    print(f"Successfully triaged {len(results)} reports into acadza-report-fix/results.json")
+    print(f"Generated {len(results)} triaged reports in results.json")
 
     bonus = engine.run_bonus_mining()
-    print(f"Bonus: Found {len(bonus)} latent defects in unreported questions!")
-    with open("acadza-report-fix/bonus_defects.json", "w", encoding="utf-8") as f:
+    with open(project_dir / "bonus_defects.json", "w", encoding="utf-8") as f:
         json.dump(bonus, f, indent=2)
+    print(f"Found {len(bonus)} latent defects in unreported questions")

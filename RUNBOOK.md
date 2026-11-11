@@ -3,11 +3,10 @@
 ## Architecture Overview
 The system consists of three interconnected layers:
 1. **Triage & Repair Engine (`engine/triage_engine.py`)**:
-   - Ingestion Layer with Prompt-Injection Neutralizer.
-   - Blind STEM Derivation Solver (independent verification).
-   - Forensic Comparator matching taxonomy rules.
-   - Surgical Mutation & Scope Guardrail Generator.
-   - Outputs `results.json` strictly adhering to Acadza ground truth.
+   - Deterministic, report-specific triage rules over the supplied fixture dataset; it does not call an LLM or independently solve questions.
+   - Taxonomy validation rejects invalid verdicts, routes, repair scopes, and malformed edits.
+   - Unknown questions and reports without an explicit rule fail rather than being marked correct by default.
+   - Writes precomputed triage records to `results.json`.
 2. **Data Aggregator & Urgency Scorer (`engine/prepare_console_data.py`)**:
    - Clusters 44 reports by the 39 questions.
    - Prioritizes by dynamic urgency: $\text{Urgency} = (\text{Reports} \times 25) + \text{Defect Weight} + \text{Block Weight}$.
@@ -16,7 +15,7 @@ The system consists of three interconnected layers:
    - Standalone web application with native MathML rendering.
    - High-contrast, dark-mode visual interface optimized for late-night faculty review.
    - Keyboard shortcuts: `J`/`K` (Next/Prev), `A` (Approve), `R` (Reject), `E` (Edit).
-   - Audit Trail recording with `localStorage` persistence and JSON export.
+   - Browser-local audit history with JSON export. It is not a shared or server-side audit log.
    - Proactive Defect Scanner tab uncovering latent defects in unreported questions.
 
 ---
@@ -27,14 +26,16 @@ The system consists of three interconnected layers:
 ```bash
 python3 engine/triage_engine.py
 ```
-*Output: Triages all 44 reports into `results.json` and runs invariant validation.*
+*Output: Applies the configured fixture rules to all 44 reports, validates each record, and writes `results.json`.*
 
 ### 2. Prepare Console Dataset & Build Console
 ```bash
 python3 engine/prepare_console_data.py
 python3 engine/build_console.py
 ```
-*Output: Generates `console_data.json`, `bonus_defects.json`, and updates `index.html`.*
+*Output: Generates `console_data.json`, `bonus_defects.json`, and updates both console HTML files.*
+
+The static console records faculty decisions in the current browser only. It does not update a question database or apply proposed changes; an "Approve" action records a decision for this demo.
 
 ### 3. Launch Local Faculty Console
 ```bash
@@ -72,4 +73,3 @@ Push the repository to GitHub, go to **Settings → Pages**, select **Deploy fro
 - [x] **`PROMPTS.md`**: Complete prompt registry, evolution history, 3 AI failure modes & fixes, design decisions log.
 - [x] **`PRODUCT.md`**: 1-page executive manifesto on student impact, safety boundaries, Week 1 metrics, and the Shadow Solver pitch.
 - [x] **Bonus Discovery**: 2 latent defects identified in unreported questions (`bonus_defects.json`).
-

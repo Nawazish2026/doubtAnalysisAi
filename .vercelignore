@@ -1,0 +1,10 @@
+.git
+.vercel
+data
+engine
+scripts
+console
+*.md
+*.json
+*.txt
+.DS_Store

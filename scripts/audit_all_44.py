@@ -1,6 +1,7 @@
 import json, re
+from pathlib import Path
 
-with open("acadza-report-fix/all_reports_dump.json") as f:
+with open(Path(__file__).with_name("all_reports_dump.json"), encoding="utf-8") as f:
     items = json.load(f)
 
 for idx, item in enumerate(items):
