@@ -3,8 +3,8 @@
 // Never add DATABASE_URL, service-role keys, or JWT signing secrets here.
 module.exports = function handler(_req, res) {
   const config = {
-    apiBaseUrl: process.env.ACADZA_API_BASE_URL || process.env.API_BASE_URL || "",
-    supabaseUrl: process.env.SUPABASE_URL || "",
+    apiBaseUrl: process.env.ACADZA_API_BASE_URL || process.env.API_BASE_URL || "https://doubt-analysis-ai-e8rm.vercel.app",
+    supabaseUrl: process.env.SUPABASE_URL || "https://pxhkyznkdytcrrgdeqjq.supabase.co",
     supabasePublishableKey:
       process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "",
   };
