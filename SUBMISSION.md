@@ -3,7 +3,8 @@
 ## Submission links
 
 - Public repository: https://github.com/Nawazish2026/doubtAnalysisAi
-- Faculty console: https://doubt-analysis-ai.vercel.app/
+- Faculty console (frontend): https://doubt-analysis-ai.vercel.app/
+- FastAPI backend/API origin (not the console UI): https://doubt-analysis-ai-e8rm.vercel.app/
 - Loom walkthrough supplied: https://www.loom.com/share/ee4022a8444749cc861cc0cbb01175ed
 
 ## Required repository files
@@ -49,6 +50,7 @@ Thank you for moving me to the build round. I have completed the Report → Fix 
 
 - **GitHub repository:** https://github.com/Nawazish2026/doubtAnalysisAi
 - **Faculty console:** https://doubt-analysis-ai.vercel.app/
+- **Backend API (optional technical link):** https://doubt-analysis-ai-e8rm.vercel.app/docs
 - **Walkthrough video:** https://www.loom.com/share/ee4022a8444749cc861cc0cbb01175ed
 
 **Answers to your questions**
