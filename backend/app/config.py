@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     supabase_url: str = ""
     supabase_jwt_secret: str | None = None
-    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    cors_origins: str = "https://doubt-analysis-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
     app_env: str = "development"
 
     model_config = SettingsConfigDict(

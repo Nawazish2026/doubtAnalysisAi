@@ -1,10 +1,10 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.db import create_pool
+from app.db import create_pool, get_db
 from app.routers import audit, questions, reports, reviews
 
 
@@ -43,8 +43,9 @@ app.include_router(audit.router)
 
 
 @app.get("/api/health", tags=["Health"])
-async def health():
-    return {"ok": True, "service": "acadza-api"}
+async def health(db=Depends(get_db)):
+    await db.fetchval("select 1")
+    return {"ok": True, "service": "acadza-api", "database": "connected"}
 
 
 @app.get("/", include_in_schema=False)

@@ -161,11 +161,21 @@ async function enterApp() {
   renderQueue(rows);
   await refreshAudit();
   if (activeSubscription) activeSubscription();
-  activeSubscription = subscribeFacultyChanges(async () => {
-    try { await refreshQueue(); await refreshAudit(); }
-    catch (error) { notify(error.message, true); }
-  });
-  notify("Realtime connected / listening for database changes");
+  activeSubscription = subscribeFacultyChanges(
+    async () => {
+      try { await refreshQueue(); await refreshAudit(); }
+      catch (error) { notify(error.message, true); }
+    },
+    (status) => {
+      if (status === "SUBSCRIBED") {
+        notify("Realtime connected — database changes will refresh this queue.");
+      } else if (["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)) {
+        notify("Realtime is unavailable (" + status + "). Use Refresh Queue to fetch the latest data.", true);
+      } else {
+        notify("Signed in — realtime status: " + status);
+      }
+    }
+  );
 }
 
 el("login-form").addEventListener("submit", async (event) => {
@@ -189,9 +199,18 @@ el("signout").addEventListener("click", async () => {
 el("refresh").addEventListener("click", () => refreshQueue().catch((error) => notify(error.message, true)));
 el("refresh-audit").addEventListener("click", () => refreshAudit().catch((error) => notify(error.message, true)));
 
-try {
-  await getCurrentUser();
-  await enterApp();
-} catch {
-  // No current session: show the sign-in card.
+const configStatus = window.ACADZA_CONFIG_STATUS;
+if (!configStatus?.configured) {
+  const missing = configStatus?.missing?.join(", ") || "frontend runtime configuration endpoint";
+  el("login-error").textContent =
+    "Frontend is not configured yet. Missing: " + missing +
+    ". Set SUPABASE_PUBLISHABLE_KEY in the frontend Vercel project, then redeploy.";
+  el("login-form").querySelector('button[type="submit"]').disabled = true;
+} else {
+  try {
+    await getCurrentUser();
+    await enterApp();
+  } catch {
+    // No current session: show the sign-in card.
+  }
 }
