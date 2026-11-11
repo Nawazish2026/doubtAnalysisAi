@@ -52,3 +52,4 @@ Instead of reactive reporting, run an asynchronous **Shadow Solver Agent** acros
 1. Every time a question is authored or imported via DTS, the agent solves it blind, matches the output against the answer key, and tests for leaky MathML (`<mspace>`), missing figures (`quesImages: []` when text says "as shown in figure"), and OCR typos.
 2. In our audit of Acadza's 43 sample questions, **this proactive approach immediately caught 2 latent defects on questions zero students had reported** (`68dea87d` with broken markup and `68dea657` with OCR variable corruption).
 3. By fixing questions *before* they ever enter a student's mock test, Acadza eliminates question defects at the source.
+

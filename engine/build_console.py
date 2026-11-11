@@ -1,8 +1,12 @@
 """
 Build script for Acadza Faculty Review Console
 Generates a standalone, dependency-free interactive HTML/JS application
-with embedded precomputed triage data, native MathML support, urgency queues,
-surgical diff viewer, and local audit logging.
+styled to match https://www.acadza.com/ branding:
+- Spherical floating pill/capsule navbar with glassmorphism
+- Acadza official brand color system: Deep Slate Navy (#070d1e / #0f1a36),
+  Acadza Royal Blue (#006AB6 / #2563EB), and Golden Amber (#F4B23A)
+- Lexend & Nunito typography with native MathML rendering
+- Urgency queue, surgical diffs, student reply preview, and audit logging.
 """
 
 import json
@@ -22,32 +26,38 @@ html_template = """<!DOCTYPE html>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['"Lexend"', '"Nunito"', 'sans-serif'],
+            body: ['"Nunito"', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              400: '#818cf8',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            },
-            surface: {
-              900: '#0b0f19',
-              850: '#111827',
-              800: '#1f2937',
-              750: '#283344',
-              700: '#374151',
+            acadza: {
+              navy: '#070d1e',
+              surface: '#0f1a36',
+              card: '#132145',
+              cardHover: '#182b59',
+              border: '#1f3468',
+              borderLight: '#2b478a',
+              blue: '#006AB6',
+              royal: '#2563EB',
+              amber: '#F4B23A',
+              amberLight: '#FACC15',
+              orange: '#E06A19',
+              emerald: '#10B981',
+              rose: '#EF4444',
             }
+          },
+          boxShadow: {
+            'glow-blue': '0 0 25px -5px rgba(0, 106, 182, 0.3)',
+            'glow-amber': '0 0 25px -5px rgba(244, 178, 58, 0.3)',
+            'pill': '0 10px 30px -5px rgba(2, 8, 23, 0.8), 0 0 0 1px rgba(37, 99, 235, 0.2)',
           }
         }
       }
@@ -56,7 +66,7 @@ html_template = """<!DOCTYPE html>
   <style>
     /* Native MathML styling enhancements */
     math {
-      font-size: 1.05em;
+      font-size: 1.08em;
       font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", serif;
       padding: 0 2px;
     }
@@ -68,75 +78,102 @@ html_template = """<!DOCTYPE html>
       height: 6px;
     }
     .custom-scroll::-webkit-scrollbar-track {
-      background: rgba(17, 24, 39, 0.4);
+      background: rgba(15, 26, 54, 0.4);
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(75, 85, 99, 0.6);
-      border-radius: 4px;
+      background: rgba(43, 71, 138, 0.6);
+      border-radius: 9999px;
     }
     .custom-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(107, 114, 128, 0.9);
+      background: rgba(0, 106, 182, 0.8);
+    }
+    /* Spherical floating capsule glow */
+    .spherical-navbar {
+      border-radius: 9999px;
+      background: linear-gradient(135deg, rgba(15, 26, 54, 0.92) 0%, rgba(10, 18, 42, 0.95) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(43, 71, 138, 0.35), 0 0 20px 0 rgba(0, 106, 182, 0.15);
     }
   </style>
 </head>
-<body class="bg-surface-900 text-gray-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-acadza-navy text-slate-100 font-body min-h-screen flex flex-col antialiased selection:bg-acadza-blue selection:text-white relative overflow-x-hidden">
 
-  <!-- TOP APP BAR -->
-  <header class="bg-surface-850/90 backdrop-blur border-b border-gray-800/80 sticky top-0 z-30 px-5 py-3">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/20 font-extrabold text-white text-lg tracking-wider">
-          A
-        </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="text-base font-bold text-white tracking-tight">Acadza</span>
-            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-brand-500/20 text-brand-400 border border-brand-500/30">Faculty Console</span>
-            <span class="text-[11px] text-gray-400 font-mono">v2.4-prod</span>
+  <!-- BACKGROUND AMBIENT GLOWS -->
+  <div class="fixed top-0 left-1/4 w-96 h-96 bg-acadza-blue/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="fixed top-20 right-1/4 w-96 h-96 bg-acadza-amber/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- SPHERICAL FLOATING HEADER -->
+  <header class="sticky top-3 z-40 px-4 max-w-7xl mx-auto w-full">
+    <div class="spherical-navbar px-5 py-2.5 flex items-center justify-between transition-all duration-300">
+      
+      <!-- Brand & Acadza Official Wordmark -->
+      <div class="flex items-center space-x-3.5 pl-1">
+        <a href="https://www.acadza.com/" target="_blank" rel="noopener noreferrer" class="flex items-center space-x-2.5 group">
+          <!-- Acadza Emblem Logo -->
+          <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-acadza-blue via-blue-600 to-acadza-amber flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
           </div>
-          <p class="text-[11px] text-gray-400">High-Stakes Report → Fix Triage Pipeline</p>
+          <div class="flex flex-col">
+            <div class="flex items-center space-x-2">
+              <span class="font-sans font-extrabold text-base tracking-wider text-white">ACADZA</span>
+              <span class="text-[10px] font-sans font-bold px-2 py-0.5 rounded-full bg-acadza-amber/20 text-acadza-amber border border-acadza-amber/30 uppercase tracking-widest">
+                Faculty
+              </span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-sans tracking-tight">Report → Fix Autonomous Loop</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Metrics Strip (Capsule Badges) -->
+      <div class="hidden lg:flex items-center space-x-2 text-xs font-sans">
+        <div class="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-acadza-surface border border-acadza-border text-slate-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+          <span>Queue:</span>
+          <span id="metric-total" class="font-bold text-white font-mono">39 Qs</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-acadza-amber/10 border border-acadza-amber/30 text-acadza-amber font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-acadza-amber animate-pulse"></span>
+          <span>Review:</span>
+          <span id="metric-review" class="font-bold text-white font-mono">5 Cases</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Auto-Applied:</span>
+          <span id="metric-auto" class="font-bold text-white font-mono">21 Cases</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400">
+          <span>Dismissed:</span>
+          <span id="metric-nochange" class="font-bold text-slate-300 font-mono">18</span>
         </div>
       </div>
 
-      <!-- Quick Metrics Strip -->
-      <div class="hidden md:flex items-center space-x-6 text-xs">
-        <div class="flex items-center space-x-2">
-          <span class="text-gray-400">Queue:</span>
-          <span id="metric-total" class="font-bold text-white bg-surface-800 px-2 py-0.5 rounded font-mono">39 Questions</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-amber-400 font-medium">Faculty Action:</span>
-          <span id="metric-review" class="font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-mono">5 Cases</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-emerald-400 font-medium">Auto-Applied:</span>
-          <span id="metric-auto" class="font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">21 Cases</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-gray-400 font-medium">Dismissed:</span>
-          <span id="metric-nochange" class="font-bold text-gray-300 bg-gray-700/30 border border-gray-600/30 px-2 py-0.5 rounded font-mono">18 Cases</span>
-        </div>
-      </div>
-
-      <!-- Navigation & Action Buttons -->
-      <div class="flex items-center space-x-3">
-        <button id="btn-tab-review" onclick="switchMainTab('review')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-sm hover:bg-brand-500 transition">
+      <!-- Navigation & Action Buttons (Pill Shapes) -->
+      <div class="flex items-center space-x-2 font-sans pr-1">
+        <button id="btn-tab-review" onclick="switchMainTab('review')" 
+          class="px-4 py-1.5 rounded-full text-xs font-bold bg-acadza-blue hover:bg-blue-600 text-white shadow-glow-blue transition">
           Review Queue
         </button>
-        <button id="btn-tab-scanner" onclick="switchMainTab('scanner')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 bg-surface-800 hover:bg-surface-750 border border-gray-700 transition flex items-center space-x-1.5">
-          <span>✨ Proactive Scanner</span>
-          <span class="bg-indigo-500/20 text-indigo-400 text-[10px] px-1.5 py-0.2 rounded font-mono">2 Bonus</span>
+        <button id="btn-tab-scanner" onclick="switchMainTab('scanner')" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-300 bg-acadza-surface hover:bg-acadza-card border border-acadza-border hover:border-acadza-amber/50 transition flex items-center space-x-1.5">
+          <span>✨ Scanner</span>
+          <span class="bg-acadza-amber/20 text-acadza-amber text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">2 Bonus</span>
         </button>
-        <button onclick="toggleAuditDrawer()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 bg-surface-800 hover:bg-surface-750 border border-gray-700 transition flex items-center space-x-1.5">
-          <span>📋 Audit Log</span>
-          <span id="audit-count-badge" class="bg-gray-700 text-gray-200 text-[10px] px-1.5 py-0.2 rounded font-mono">0</span>
+        <button onclick="toggleAuditDrawer()" 
+          class="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-300 bg-acadza-surface hover:bg-acadza-card border border-acadza-border transition flex items-center space-x-1.5">
+          <span>📋 Audit</span>
+          <span id="audit-count-badge" class="bg-acadza-cardHover text-slate-200 text-[10px] px-1.5 py-0.2 rounded-full font-mono">0</span>
         </button>
       </div>
+
     </div>
   </header>
 
   <!-- MAIN WRAPPER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 mt-2">
 
     <!-- VIEW 1: REVIEW QUEUE (DEFAULT) -->
     <div id="view-review" class="contents">
@@ -145,53 +182,55 @@ html_template = """<!DOCTYPE html>
       <section class="lg:col-span-4 flex flex-col space-y-4">
         
         <!-- Filter Controls Card -->
-        <div class="bg-surface-850 p-4 rounded-2xl border border-gray-800 shadow-sm space-y-3">
+        <div class="bg-acadza-surface p-4 rounded-3xl border border-acadza-border shadow-lg space-y-3">
           <div class="relative">
             <input type="text" id="search-input" oninput="applyFilters()" placeholder="Search QID, topic, student comment..." 
-              class="w-full bg-surface-900 border border-gray-700/80 rounded-xl px-3.5 py-2 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-500 transition font-mono">
-            <span class="absolute right-3 top-2.5 text-gray-500 text-xs">⌘K</span>
+              class="w-full bg-acadza-navy/80 border border-acadza-border rounded-full px-4 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-acadza-blue focus:ring-1 focus:ring-acadza-blue transition font-mono">
+            <span class="absolute right-3.5 top-2.5 text-slate-500 text-xs font-mono">⌘K</span>
           </div>
 
-          <!-- Route Status Filters -->
-          <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <button onclick="setFilterRoute('all')" id="filter-route-all" class="filter-route-btn px-2.5 py-1 rounded-lg font-medium bg-brand-600 text-white transition">All</button>
-            <button onclick="setFilterRoute('faculty_review')" id="filter-route-faculty_review" class="filter-route-btn px-2.5 py-1 rounded-lg font-medium bg-surface-800 text-amber-300 border border-amber-500/30 hover:bg-surface-750 transition">Review (5)</button>
-            <button onclick="setFilterRoute('auto_apply')" id="filter-route-auto_apply" class="filter-route-btn px-2.5 py-1 rounded-lg font-medium bg-surface-800 text-emerald-300 border border-emerald-500/30 hover:bg-surface-750 transition">Auto-Applied</button>
-            <button onclick="setFilterRoute('no_change')" id="filter-route-no_change" class="filter-route-btn px-2.5 py-1 rounded-lg font-medium bg-surface-800 text-gray-400 border border-gray-700 hover:bg-surface-750 transition">Dismissed</button>
+          <!-- Route Status Filters (Spherical Pills) -->
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-sans">
+            <button onclick="setFilterRoute('all')" id="filter-route-all" class="filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-blue text-white shadow-sm transition">All</button>
+            <button onclick="setFilterRoute('faculty_review')" id="filter-route-faculty_review" class="filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-card text-acadza-amber border border-acadza-amber/30 hover:bg-acadza-cardHover transition">Review (5)</button>
+            <button onclick="setFilterRoute('auto_apply')" id="filter-route-auto_apply" class="filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-card text-emerald-400 border border-emerald-500/30 hover:bg-acadza-cardHover transition">Auto-Applied</button>
+            <button onclick="setFilterRoute('no_change')" id="filter-route-no_change" class="filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-card text-slate-400 border border-acadza-border hover:bg-acadza-cardHover transition">Dismissed</button>
           </div>
 
           <!-- Subject Pill Filters -->
-          <div class="flex flex-wrap gap-1.5 text-[11px] pt-1 border-t border-gray-800/80">
-            <button onclick="setFilterSubject('all')" id="filter-subj-all" class="filter-subj-btn px-2 py-0.5 rounded font-medium bg-gray-700 text-white">All Subj</button>
-            <button onclick="setFilterSubject('Physics')" id="filter-subj-Physics" class="filter-subj-btn px-2 py-0.5 rounded font-medium bg-surface-800 text-gray-400 hover:text-white">Physics</button>
-            <button onclick="setFilterSubject('Botany')" id="filter-subj-Botany" class="filter-subj-btn px-2 py-0.5 rounded font-medium bg-surface-800 text-gray-400 hover:text-white">Botany</button>
-            <button onclick="setFilterSubject('Zoology')" id="filter-subj-Zoology" class="filter-subj-btn px-2 py-0.5 rounded font-medium bg-surface-800 text-gray-400 hover:text-white">Zoology</button>
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-sans pt-2 border-t border-acadza-border/60">
+            <button onclick="setFilterSubject('all')" id="filter-subj-all" class="filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-border text-white">All Subjects</button>
+            <button onclick="setFilterSubject('Physics')" id="filter-subj-Physics" class="filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-card text-slate-400 hover:text-white">Physics</button>
+            <button onclick="setFilterSubject('Botany')" id="filter-subj-Botany" class="filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-card text-slate-400 hover:text-white">Botany</button>
+            <button onclick="setFilterSubject('Zoology')" id="filter-subj-Zoology" class="filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-card text-slate-400 hover:text-white">Zoology</button>
           </div>
         </div>
 
         <!-- Scrollable Queue List -->
-        <div class="flex-1 bg-surface-850 rounded-2xl border border-gray-800 shadow-sm flex flex-col overflow-hidden max-h-[calc(100vh-250px)]">
-          <div class="px-4 py-3 border-b border-gray-800 flex items-center justify-between bg-surface-850/60">
-            <span class="text-xs font-semibold text-gray-300">Urgency Prioritized Queue</span>
-            <span class="text-[11px] text-gray-500 font-mono">Sorted by Urgency Score</span>
+        <div class="flex-1 bg-acadza-surface rounded-3xl border border-acadza-border shadow-lg flex flex-col overflow-hidden max-h-[calc(100vh-270px)]">
+          <div class="px-5 py-3.5 border-b border-acadza-border flex items-center justify-between bg-acadza-surface/80">
+            <span class="text-xs font-sans font-bold text-slate-200 uppercase tracking-wider">Priority Queue</span>
+            <span class="text-[11px] text-acadza-amber font-mono font-semibold flex items-center space-x-1">
+              <span>⚡ Ranked by Urgency</span>
+            </span>
           </div>
 
-          <div id="queue-container" class="flex-1 overflow-y-auto divide-y divide-gray-800/60 custom-scroll">
+          <div id="queue-container" class="flex-1 overflow-y-auto divide-y divide-acadza-border/60 custom-scroll">
             <!-- Dynamic Items Injected Here -->
           </div>
         </div>
 
         <!-- Keyboard Shortcut Helper -->
-        <div class="bg-surface-850/50 rounded-xl p-2.5 border border-gray-800/60 text-[11px] text-gray-400 flex items-center justify-between">
+        <div class="bg-acadza-surface/60 rounded-2xl p-3 border border-acadza-border text-[11px] text-slate-400 flex items-center justify-between font-sans">
           <span class="flex items-center space-x-1.5">
-            <kbd class="bg-surface-750 text-gray-200 px-1.5 py-0.5 rounded font-mono text-[10px]">J</kbd>
-            <kbd class="bg-surface-750 text-gray-200 px-1.5 py-0.5 rounded font-mono text-[10px]">K</kbd>
+            <kbd class="bg-acadza-card text-slate-200 px-2 py-0.5 rounded-md font-mono text-[10px] border border-acadza-border">J</kbd>
+            <kbd class="bg-acadza-card text-slate-200 px-2 py-0.5 rounded-md font-mono text-[10px] border border-acadza-border">K</kbd>
             <span>Next / Prev</span>
           </span>
           <span class="flex items-center space-x-1.5">
-            <kbd class="bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded font-mono text-[10px]">A</kbd>
+            <kbd class="bg-emerald-950/80 text-emerald-300 px-2 py-0.5 rounded-md font-mono text-[10px] border border-emerald-800">A</kbd>
             <span>Approve</span>
-            <kbd class="bg-rose-900/60 text-rose-300 px-1.5 py-0.5 rounded font-mono text-[10px]">R</kbd>
+            <kbd class="bg-rose-950/80 text-rose-300 px-2 py-0.5 rounded-md font-mono text-[10px] border border-rose-800">R</kbd>
             <span>Reject</span>
           </span>
         </div>
@@ -201,7 +240,7 @@ html_template = """<!DOCTYPE html>
       <section class="lg:col-span-8 flex flex-col space-y-5">
 
         <!-- Active Case Card -->
-        <div id="active-case-card" class="bg-surface-850 rounded-2xl border border-gray-800 shadow-lg p-6 space-y-6 flex-1 flex flex-col">
+        <div id="active-case-card" class="bg-acadza-surface rounded-3xl border border-acadza-border shadow-xl p-6 md:p-7 space-y-6 flex-1 flex flex-col">
           <!-- Populated by JavaScript -->
         </div>
 
@@ -211,21 +250,26 @@ html_template = """<!DOCTYPE html>
 
     <!-- VIEW 2: PROACTIVE DEFECT SCANNER (BONUS) -->
     <div id="view-scanner" class="hidden lg:col-span-12 space-y-6">
-      <div class="bg-surface-850 p-6 rounded-2xl border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
+      <div class="bg-acadza-surface p-7 rounded-3xl border border-acadza-border shadow-xl space-y-5">
+        <div class="flex items-center justify-between pb-4 border-b border-acadza-border">
           <div>
-            <div class="flex items-center space-x-2">
-              <h2 class="text-lg font-bold text-white">Proactive Latent Defect Mining</h2>
-              <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs px-2 py-0.5 rounded-full font-semibold">Bonus Assessment</span>
+            <div class="flex items-center space-x-3">
+              <h2 class="text-xl font-sans font-bold text-white">Proactive Latent Defect Mining</h2>
+              <span class="bg-acadza-amber/20 text-acadza-amber border border-acadza-amber/30 text-xs px-3 py-1 rounded-full font-sans font-bold uppercase tracking-wider">
+                Bonus AI Capability
+              </span>
             </div>
-            <p class="text-xs text-gray-400 mt-1">Autonomous scanner discovered defects in questions that <strong>zero students reported</strong>. Fixing defects before students meet them eliminates exam-day trauma.</p>
+            <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Our autonomous solver audited questions with <strong>zero student reports</strong> and flagged dormant defects. Fixing these before students take mock tests eliminates negative marking discrepancies at the root.
+            </p>
           </div>
-          <div class="text-right font-mono text-xs text-gray-400">
-            <span>Scan Coverage: 43/43 Questions</span>
+          <div class="text-right font-mono text-xs text-slate-400 bg-acadza-card px-3 py-2 rounded-2xl border border-acadza-border">
+            <div class="text-white font-bold">Audit Coverage: 43/43</div>
+            <div class="text-acadza-amber">2 Latent Defects Found</div>
           </div>
         </div>
 
-        <div id="bonus-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div id="bonus-container" class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
           <!-- Bonus defect cards injected here -->
         </div>
       </div>
@@ -234,28 +278,28 @@ html_template = """<!DOCTYPE html>
   </main>
 
   <!-- AUDIT TRAIL MODAL DRAWER -->
-  <div id="audit-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-surface-850 border-l border-gray-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
-    <div class="p-4 border-b border-gray-800 flex items-center justify-between bg-surface-850/80">
-      <div class="flex items-center space-x-2">
-        <span class="text-sm font-bold text-white">Faculty Action Audit Trail</span>
-        <span id="drawer-audit-badge" class="bg-brand-500/20 text-brand-300 text-xs px-2 py-0.5 rounded-full font-mono">0 entries</span>
+  <div id="audit-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-acadza-surface border-l border-acadza-border shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <div class="p-5 border-b border-acadza-border flex items-center justify-between bg-acadza-surface/90">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-base font-sans font-bold text-white">Faculty Action Audit Trail</span>
+        <span id="drawer-audit-badge" class="bg-acadza-blue/20 text-acadza-blue text-xs px-2.5 py-0.5 rounded-full font-mono font-semibold">0 entries</span>
       </div>
-      <button onclick="toggleAuditDrawer()" class="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-surface-800">
+      <button onclick="toggleAuditDrawer()" class="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-acadza-card transition">
         ✕
       </button>
     </div>
 
-    <div id="audit-log-list" class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll">
-      <div class="text-center py-12 text-gray-500 text-xs">
+    <div id="audit-log-list" class="flex-1 overflow-y-auto p-5 space-y-3 custom-scroll">
+      <div class="text-center py-12 text-slate-500 text-xs">
         No actions recorded yet. Approve, Edit or Dismiss cases to log audit history.
       </div>
     </div>
 
-    <div class="p-4 border-t border-gray-800 bg-surface-900 flex items-center justify-between">
-      <button onclick="exportAuditLog()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-800 hover:bg-surface-750 text-gray-200 border border-gray-700 transition flex items-center space-x-1.5">
+    <div class="p-5 border-t border-acadza-border bg-acadza-navy flex items-center justify-between font-sans">
+      <button onclick="exportAuditLog()" class="px-4 py-2 rounded-full text-xs font-bold bg-acadza-card hover:bg-acadza-cardHover text-slate-200 border border-acadza-border transition flex items-center space-x-2">
         <span>📥 Download audit_log.json</span>
       </button>
-      <button onclick="clearAuditLog()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:text-rose-300 transition">
+      <button onclick="clearAuditLog()" class="px-3 py-1.5 rounded-full text-xs font-semibold text-rose-400 hover:text-rose-300 transition">
         Clear
       </button>
     </div>
@@ -290,21 +334,21 @@ html_template = """<!DOCTYPE html>
 
       if (!list) return;
       if (auditLog.length === 0) {
-        list.innerHTML = '<div class="text-center py-12 text-gray-500 text-xs">No actions recorded yet.</div>';
+        list.innerHTML = '<div class="text-center py-12 text-slate-500 text-xs">No actions recorded yet.</div>';
         return;
       }
 
       list.innerHTML = auditLog.map(entry => `
-        <div class="bg-surface-900 p-3 rounded-xl border border-gray-800 space-y-1.5 text-xs">
+        <div class="bg-acadza-navy p-3.5 rounded-2xl border border-acadza-border space-y-1.5 text-xs">
           <div class="flex items-center justify-between">
-            <span class="font-mono font-semibold ${entry.action === 'APPROVED' ? 'text-emerald-400' : entry.action === 'EDITED' ? 'text-indigo-400' : 'text-rose-400'}">
+            <span class="font-mono font-bold ${entry.action === 'APPROVED' ? 'text-emerald-400' : entry.action === 'EDITED' ? 'text-acadza-amber' : 'text-rose-400'}">
               ${entry.action}
             </span>
-            <span class="text-[10px] text-gray-500 font-mono">${new Date(entry.timestamp).toLocaleTimeString()}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${new Date(entry.timestamp).toLocaleTimeString()}</span>
           </div>
-          <div class="text-[11px] text-gray-300 font-mono">QID: ${entry.questionId.substring(0, 8)}...</div>
-          <p class="text-[11px] text-gray-400">${entry.notes || 'No faculty comment'}</p>
-          <div class="text-[10px] text-gray-500 pt-1 border-t border-gray-800/80">Reviewer: ${entry.reviewer}</div>
+          <div class="text-[11px] text-slate-300 font-mono">QID: ${entry.questionId.substring(0, 8)}...</div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">${entry.notes || 'No faculty comment'}</p>
+          <div class="text-[10px] text-slate-500 pt-1.5 border-t border-acadza-border font-mono">Reviewer: ${entry.reviewer}</div>
         </div>
       `).join('');
     }
@@ -341,13 +385,13 @@ html_template = """<!DOCTYPE html>
       if (tab === 'review') {
         viewReview.classList.remove('hidden');
         viewScanner.classList.add('hidden');
-        btnReview.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-sm hover:bg-brand-500 transition";
-        btnScanner.className = "px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 bg-surface-800 hover:bg-surface-750 border border-gray-700 transition flex items-center space-x-1.5";
+        btnReview.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-acadza-blue hover:bg-blue-600 text-white shadow-glow-blue transition";
+        btnScanner.className = "px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-300 bg-acadza-surface hover:bg-acadza-card border border-acadza-border hover:border-acadza-amber/50 transition flex items-center space-x-1.5";
       } else {
         viewReview.classList.add('hidden');
         viewScanner.classList.remove('hidden');
-        btnScanner.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-sm hover:bg-brand-500 transition flex items-center space-x-1.5";
-        btnReview.className = "px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 bg-surface-800 hover:bg-surface-750 border border-gray-700 transition";
+        btnScanner.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-acadza-amber hover:bg-yellow-500 text-slate-900 shadow-glow-amber transition flex items-center space-x-1.5";
+        btnReview.className = "px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-300 bg-acadza-surface hover:bg-acadza-card border border-acadza-border transition";
         renderBonusScanner();
       }
     }
@@ -355,11 +399,11 @@ html_template = """<!DOCTYPE html>
     function setFilterRoute(route) {
       filterRoute = route;
       document.querySelectorAll('.filter-route-btn').forEach(b => {
-        b.className = 'filter-route-btn px-2.5 py-1 rounded-lg font-medium bg-surface-800 text-gray-400 border border-gray-700 hover:bg-surface-750 transition';
+        b.className = 'filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-card text-slate-400 border border-acadza-border hover:bg-acadza-cardHover transition';
       });
       const activeBtn = document.getElementById('filter-route-' + route);
       if (activeBtn) {
-        activeBtn.className = 'filter-route-btn px-2.5 py-1 rounded-lg font-semibold bg-brand-600 text-white shadow-sm transition';
+        activeBtn.className = 'filter-route-btn px-3 py-1 rounded-full font-semibold bg-acadza-blue text-white shadow-sm transition';
       }
       applyFilters();
     }
@@ -367,11 +411,11 @@ html_template = """<!DOCTYPE html>
     function setFilterSubject(subj) {
       filterSubject = subj;
       document.querySelectorAll('.filter-subj-btn').forEach(b => {
-        b.className = 'filter-subj-btn px-2 py-0.5 rounded font-medium bg-surface-800 text-gray-400 hover:text-white';
+        b.className = 'filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-card text-slate-400 hover:text-white';
       });
       const activeBtn = document.getElementById('filter-subj-' + subj);
       if (activeBtn) {
-        activeBtn.className = 'filter-subj-btn px-2 py-0.5 rounded font-semibold bg-gray-700 text-white';
+        activeBtn.className = 'filter-subj-btn px-2.5 py-0.5 rounded-full font-semibold bg-acadza-border text-white';
       }
       applyFilters();
     }
@@ -383,24 +427,15 @@ html_template = """<!DOCTYPE html>
 
     function getFilteredItems() {
       return CONSOLE_DATA.filter(item => {
-        // Route filter
-        if (filterRoute !== 'all' && item.primaryTriage.route !== filterRoute) {
-          return false;
-        }
-        // Subject filter
-        if (filterSubject !== 'all' && item.subject !== filterSubject) {
-          return false;
-        }
-        // Search query
+        if (filterRoute !== 'all' && item.primaryTriage.route !== filterRoute) return false;
+        if (filterSubject !== 'all' && item.subject !== filterSubject) return false;
         if (searchQuery) {
           const matchQid = item.questionId.toLowerCase().includes(searchQuery);
           const matchSubj = item.subject.toLowerCase().includes(searchQuery);
           const matchChap = item.chapter.toLowerCase().includes(searchQuery);
           const matchRepair = (item.primaryTriage.repair || '').toLowerCase().includes(searchQuery);
           const matchComment = item.reports.some(r => r.comment.toLowerCase().includes(searchQuery));
-          if (!matchQid && !matchSubj && !matchChap && !matchRepair && !matchComment) {
-            return false;
-          }
+          if (!matchQid && !matchSubj && !matchChap && !matchRepair && !matchComment) return false;
         }
         return true;
       });
@@ -412,22 +447,19 @@ html_template = """<!DOCTYPE html>
 
       if (items.length === 0) {
         container.innerHTML = `
-          <div class="p-8 text-center text-gray-500 text-xs">
-            No question cases match the active filters.
+          <div class="p-8 text-center text-slate-500 text-xs font-sans">
+            No question cases match active filters.
           </div>
         `;
         document.getElementById('active-case-card').innerHTML = `
-          <div class="flex-1 flex items-center justify-center text-center text-gray-500 text-sm">
+          <div class="flex-1 flex items-center justify-center text-center text-slate-500 text-sm font-sans">
             Select or reset filters to review cases.
           </div>
         `;
         return;
       }
 
-      // Keep active index valid
-      if (activeIndex >= items.length) {
-        activeIndex = 0;
-      }
+      if (activeIndex >= items.length) activeIndex = 0;
 
       container.innerHTML = items.map((item, idx) => {
         const isSelected = idx === activeIndex;
@@ -435,39 +467,39 @@ html_template = """<!DOCTYPE html>
         const isMulti = item.reportCount > 1;
         const isUrgent = item.urgencyScore >= 100;
 
-        let badgeBg = "bg-gray-800 text-gray-400 border-gray-700";
-        if (triage.route === 'faculty_review') badgeBg = "bg-amber-500/15 text-amber-300 border-amber-500/30";
+        let badgeBg = "bg-acadza-card text-slate-400 border-acadza-border";
+        if (triage.route === 'faculty_review') badgeBg = "bg-acadza-amber/15 text-acadza-amber border-acadza-amber/30";
         else if (triage.route === 'auto_apply') badgeBg = "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
 
         return `
-          <div onclick="selectCase(${idx})" class="p-3.5 cursor-pointer transition select-none ${isSelected ? 'bg-brand-600/10 border-l-4 border-brand-500' : 'hover:bg-surface-800/60'}">
+          <div onclick="selectCase(${idx})" class="p-4 cursor-pointer transition select-none ${isSelected ? 'bg-acadza-card border-l-4 border-acadza-blue' : 'hover:bg-acadza-card/50'}">
             <div class="flex items-center justify-between mb-1.5">
               <div class="flex items-center space-x-2">
-                <span class="text-xs font-mono font-bold ${isUrgent ? 'text-amber-400' : 'text-gray-300'}">
+                <span class="text-xs font-mono font-bold ${isUrgent ? 'text-acadza-amber' : 'text-slate-200'}">
                   ${isUrgent ? '🔥 ' : ''}${item.questionId.substring(0, 6)}...
                 </span>
-                ${isMulti ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">${item.reportCount} reports</span>` : ''}
+                ${isMulti ? `<span class="px-2 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">${item.reportCount} reports</span>` : ''}
               </div>
-              <span class="text-[10px] px-2 py-0.5 rounded font-medium border ${badgeBg}">
-                ${triage.route === 'faculty_review' ? 'Faculty Review' : triage.route === 'auto_apply' ? 'Auto-Apply' : 'Dismissed'}
+              <span class="text-[10px] px-2.5 py-0.5 rounded-full font-sans font-semibold border ${badgeBg}">
+                ${triage.route === 'faculty_review' ? 'Faculty Review' : triage.route === 'auto_apply' ? 'Auto-Applied' : 'Dismissed'}
               </span>
             </div>
 
-            <div class="flex items-center space-x-2 text-[11px] text-gray-400 mb-2">
-              <span class="font-medium text-gray-300">${item.subject}</span>
+            <div class="flex items-center space-x-2 text-[11px] text-slate-400 mb-2 font-sans">
+              <span class="font-bold text-slate-300">${item.subject}</span>
               <span>•</span>
               <span class="truncate max-w-[130px]">${item.chapter}</span>
               <span>•</span>
-              <span class="text-gray-500 font-mono">${item.questionType}</span>
+              <span class="text-slate-500 font-mono">${item.questionType}</span>
             </div>
 
-            <div class="text-[11px] text-gray-300 line-clamp-1 italic bg-surface-900/60 px-2 py-1 rounded border border-gray-800/80">
+            <div class="text-[11px] text-slate-300 line-clamp-1 italic bg-acadza-navy/80 px-2.5 py-1.5 rounded-xl border border-acadza-border">
               "${item.reports[0].comment}"
             </div>
 
-            <div class="mt-2 flex items-center justify-between text-[10px] text-gray-500 font-mono">
-              <span>Repair: <strong class="text-gray-400">${triage.repair || 'none'}</strong></span>
-              <span>Urgency: <strong class="${isUrgent ? 'text-amber-400 font-bold' : 'text-gray-400'}">${item.urgencyScore}</strong></span>
+            <div class="mt-2.5 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <span>Repair: <strong class="text-slate-300">${triage.repair || 'none'}</strong></span>
+              <span>Urgency: <strong class="${isUrgent ? 'text-acadza-amber font-bold' : 'text-slate-300'}">${item.urgencyScore}</strong></span>
             </div>
           </div>
         `;
@@ -488,29 +520,29 @@ html_template = """<!DOCTYPE html>
       const triage = item.primaryTriage;
       const diff = item.diff;
 
-      let routePill = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-800 text-gray-300 border border-gray-700">Dismissed / No Change</span>`;
+      let routePill = `<span class="px-3.5 py-1 rounded-full text-xs font-sans font-bold bg-acadza-card text-slate-300 border border-acadza-border">Dismissed / No Change</span>`;
       if (triage.route === 'faculty_review') {
-        routePill = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">Action Required • Faculty Review</span>`;
+        routePill = `<span class="px-3.5 py-1 rounded-full text-xs font-sans font-bold bg-acadza-amber/20 text-acadza-amber border border-acadza-amber/40 animate-pulse">Action Required • Faculty Review</span>`;
       } else if (triage.route === 'auto_apply') {
-        routePill = `<span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Safe Candidate • Auto-Applied</span>`;
+        routePill = `<span class="px-3.5 py-1 rounded-full text-xs font-sans font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Safe Candidate • Auto-Applied</span>`;
       }
 
       card.innerHTML = `
         <!-- Case Top Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-gray-800">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-acadza-border">
           <div>
             <div class="flex items-center space-x-3">
               <h1 class="text-base font-bold text-white font-mono flex items-center space-x-2">
                 <span>QID: ${item.questionId}</span>
               </h1>
-              <span class="text-xs px-2 py-0.5 rounded bg-surface-800 text-gray-400 font-mono border border-gray-700">${item.questionType}</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-acadza-card text-slate-300 font-mono border border-acadza-border">${item.questionType}</span>
             </div>
-            <div class="flex items-center space-x-2 text-xs text-gray-400 mt-1">
-              <span class="text-brand-400 font-semibold">${item.subject}</span>
+            <div class="flex items-center space-x-2 text-xs text-slate-400 mt-1 font-sans">
+              <span class="text-acadza-blue font-bold">${item.subject}</span>
               <span>/</span>
-              <span>${item.chapter}</span>
+              <span class="text-slate-200">${item.chapter}</span>
               <span>/</span>
-              <span class="text-gray-500">Level: ${item.level}</span>
+              <span class="text-slate-400">Level: <strong class="text-slate-200">${item.level}</strong></span>
             </div>
           </div>
           <div>
@@ -519,42 +551,42 @@ html_template = """<!DOCTYPE html>
         </div>
 
         <!-- Student Reports Strip -->
-        <div class="bg-surface-900 rounded-xl p-4 border border-gray-800 space-y-2.5">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-gray-300 flex items-center space-x-1.5">
+        <div class="bg-acadza-navy/90 rounded-2xl p-4 border border-acadza-border space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-sans">
+            <span class="font-bold text-slate-300 flex items-center space-x-1.5">
               <span>Student Error Signal</span>
-              <span class="bg-gray-800 px-1.5 py-0.2 rounded text-[10px] text-gray-400 font-mono">${item.reports.length} report(s)</span>
+              <span class="bg-acadza-card px-2 py-0.5 rounded-full text-[10px] text-acadza-amber font-mono font-bold">${item.reports.length} report(s)</span>
             </span>
-            <span class="text-[11px] text-gray-500">Treat comment as a lead, not an instruction</span>
+            <span class="text-[11px] text-slate-500">Sensor lead, not an instruction</span>
           </div>
           <div class="space-y-2">
             ${item.reports.map(r => `
-              <div class="bg-surface-850 p-2.5 rounded-lg border border-gray-800/80 flex items-start justify-between text-xs">
+              <div class="bg-acadza-surface p-3 rounded-xl border border-acadza-border flex items-start justify-between text-xs">
                 <div class="space-y-1">
-                  <div class="font-mono text-gray-200">"${r.comment}"</div>
-                  <div class="text-[10px] text-gray-500 font-mono">Student: ${r.studentId} • Source: ${r.source.toUpperCase()} • Reported: ${new Date(r.reportedAt).toLocaleDateString()}</div>
+                  <div class="font-mono text-slate-200 font-medium">"${r.comment}"</div>
+                  <div class="text-[10px] text-slate-500 font-mono">Student: ${r.studentId} • Platform: ${r.source.toUpperCase()} • Reported: ${new Date(r.reportedAt).toLocaleDateString()}</div>
                 </div>
-                <span class="text-[10px] font-mono text-gray-400 bg-surface-900 px-2 py-0.5 rounded border border-gray-800">${r.reportId}</span>
+                <span class="text-[10px] font-mono text-slate-400 bg-acadza-navy px-2 py-0.5 rounded-full border border-acadza-border">${r.reportId}</span>
               </div>
             `).join('')}
           </div>
         </div>
 
         <!-- AI Forensic Triage & Proof -->
-        <div class="bg-gradient-to-br from-surface-850 to-surface-900 p-4 rounded-xl border border-brand-500/20 space-y-3">
-          <div class="flex items-center justify-between text-xs">
+        <div class="bg-gradient-to-br from-acadza-card via-acadza-surface to-acadza-navy p-5 rounded-2xl border border-blue-500/30 space-y-3">
+          <div class="flex items-center justify-between text-xs font-sans">
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-brand-300 text-xs">AI Evaluation & STEM Proof</span>
-              <span class="bg-surface-800 text-gray-300 px-2 py-0.5 rounded text-[10px] font-mono">Verdict: <strong class="text-white">${triage.verdict}</strong></span>
-              ${triage.repair ? `<span class="bg-indigo-900/40 text-indigo-300 border border-indigo-700/50 px-2 py-0.5 rounded text-[10px] font-mono">Repair: <strong>${triage.repair}</strong></span>` : ''}
+              <span class="font-bold text-blue-300">AI Evaluation & STEM Proof</span>
+              <span class="bg-acadza-navy text-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-mono border border-acadza-border">Verdict: <strong class="text-white">${triage.verdict}</strong></span>
+              ${triage.repair ? `<span class="bg-blue-950/60 text-blue-300 border border-blue-800/80 px-2.5 py-0.5 rounded-full text-[10px] font-mono">Repair: <strong>${triage.repair}</strong></span>` : ''}
             </div>
             <div class="flex items-center space-x-1.5 text-xs font-mono">
-              <span class="text-gray-400">Confidence:</span>
+              <span class="text-slate-400">Confidence:</span>
               <span class="font-bold text-emerald-400">${Math.round(triage.confidence * 100)}%</span>
             </div>
           </div>
 
-          <div class="bg-surface-900/80 p-3 rounded-lg border border-gray-800 text-xs text-gray-200 font-sans leading-relaxed">
+          <div class="bg-acadza-navy/90 p-3.5 rounded-xl border border-acadza-border text-xs text-slate-200 leading-relaxed font-body">
             ${triage.evidence}
           </div>
         </div>
@@ -562,27 +594,27 @@ html_template = """<!DOCTYPE html>
         <!-- Question & Stored Content Renderer -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
           <!-- Stored Question HTML -->
-          <div class="bg-surface-900 rounded-xl p-4 border border-gray-800 space-y-2 flex flex-col">
-            <div class="flex items-center justify-between text-xs text-gray-400 pb-2 border-b border-gray-800">
-              <span class="font-semibold text-gray-300">Live Question Stem & Options</span>
-              <span class="text-[10px] font-mono text-gray-500">MathML Native</span>
+          <div class="bg-acadza-navy/90 rounded-2xl p-4 border border-acadza-border space-y-2 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-acadza-border font-sans">
+              <span class="font-bold text-slate-300">Question Stem & Options</span>
+              <span class="text-[10px] font-mono text-acadza-blue">MathML Native</span>
             </div>
-            <div class="text-xs text-gray-200 space-y-2 overflow-y-auto max-h-56 custom-scroll p-1 leading-relaxed">
+            <div class="text-xs text-slate-200 space-y-2 overflow-y-auto max-h-56 custom-scroll p-1 leading-relaxed">
               ${item.rawQuestionHtml}
             </div>
-            <div class="pt-2 border-t border-gray-800 flex items-center justify-between text-xs">
-              <span class="text-gray-400">Stored DB Key:</span>
-              <span class="font-mono font-bold text-emerald-400 bg-surface-800 px-2.5 py-0.5 rounded border border-gray-700">${item.storedAnswer || 'N/A'}</span>
+            <div class="pt-2 border-t border-acadza-border flex items-center justify-between text-xs font-sans">
+              <span class="text-slate-400">Stored DB Key:</span>
+              <span class="font-mono font-bold text-emerald-400 bg-acadza-card px-3 py-1 rounded-full border border-acadza-border">${item.storedAnswer || 'N/A'}</span>
             </div>
           </div>
 
           <!-- Stored Solution HTML -->
-          <div class="bg-surface-900 rounded-xl p-4 border border-gray-800 space-y-2 flex flex-col">
-            <div class="flex items-center justify-between text-xs text-gray-400 pb-2 border-b border-gray-800">
-              <span class="font-semibold text-gray-300">Live Solution Derivation</span>
-              <span class="text-[10px] font-mono text-gray-500">MathML Native</span>
+          <div class="bg-acadza-navy/90 rounded-2xl p-4 border border-acadza-border space-y-2 flex flex-col">
+            <div class="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-acadza-border font-sans">
+              <span class="font-bold text-slate-300">Solution Derivation</span>
+              <span class="text-[10px] font-mono text-acadza-blue">MathML Native</span>
             </div>
-            <div class="text-xs text-gray-200 space-y-2 overflow-y-auto max-h-56 custom-scroll p-1 leading-relaxed">
+            <div class="text-xs text-slate-200 space-y-2 overflow-y-auto max-h-56 custom-scroll p-1 leading-relaxed">
               ${item.rawSolutionHtml}
             </div>
           </div>
@@ -590,17 +622,20 @@ html_template = """<!DOCTYPE html>
 
         <!-- Surgical Diff Card (If defect has proposed edit) -->
         ${diff ? `
-          <div class="bg-surface-900 rounded-xl p-4 border border-amber-500/20 space-y-2.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-amber-300">Proposed Surgical Edit (Scope: ${diff.field})</span>
-              <span class="text-[10px] text-gray-500 font-mono">Zero-Rewrite Policy Guaranteed</span>
+          <div class="bg-acadza-navy/90 rounded-2xl p-4 border border-acadza-amber/30 space-y-2.5">
+            <div class="flex items-center justify-between text-xs font-sans">
+              <span class="font-bold text-acadza-amber flex items-center space-x-1.5">
+                <span>Proposed Surgical Patch</span>
+                <span class="text-[10px] font-mono text-slate-400">Target Field: <strong>${diff.field}</strong></span>
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">Zero-Rewrite Policy Guaranteed</span>
             </div>
             <div class="grid grid-cols-2 gap-3 text-xs font-mono">
-              <div class="bg-rose-950/20 border border-rose-900/40 p-3 rounded-lg text-rose-300 space-y-1">
+              <div class="bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl text-rose-300 space-y-1">
                 <div class="text-[10px] uppercase font-bold text-rose-400 tracking-wider">Before (Find)</div>
                 <div class="break-all">${escapeHtml(diff.before)}</div>
               </div>
-              <div class="bg-emerald-950/20 border border-emerald-900/40 p-3 rounded-lg text-emerald-300 space-y-1">
+              <div class="bg-emerald-950/20 border border-emerald-900/40 p-3 rounded-xl text-emerald-300 space-y-1">
                 <div class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">After (Replace)</div>
                 <div class="break-all">${escapeHtml(diff.after)}</div>
               </div>
@@ -609,34 +644,34 @@ html_template = """<!DOCTYPE html>
         ` : ''}
 
         <!-- Student Reply Preview & Editor -->
-        <div class="bg-surface-900 rounded-xl p-4 border border-gray-800 space-y-2">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-gray-300">Student Response Dispatch (Preview)</span>
-            <span class="text-[10px] text-gray-500">Tone: 17-yr old stressed JEE/NEET aspirant</span>
+        <div class="bg-acadza-navy/90 rounded-2xl p-4 border border-acadza-border space-y-2">
+          <div class="flex items-center justify-between text-xs font-sans">
+            <span class="font-bold text-slate-300">Student Response Preview</span>
+            <span class="text-[10px] text-slate-500">Tone: 17-yr old stressed JEE/NEET aspirant</span>
           </div>
           <textarea id="student-reply-editor" rows="2" 
-            class="w-full bg-surface-850 border border-gray-700/80 rounded-xl p-3 text-xs text-gray-200 focus:outline-none focus:border-brand-500 transition leading-relaxed">${triage.student_reply}</textarea>
+            class="w-full bg-acadza-surface border border-acadza-border rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-acadza-blue focus:ring-1 focus:ring-acadza-blue transition leading-relaxed">${triage.student_reply}</textarea>
         </div>
 
         <!-- Bottom Action Bar (Approve / Edit / Reject) -->
-        <div class="pt-4 border-t border-gray-800 flex items-center justify-between">
+        <div class="pt-4 border-t border-acadza-border flex items-center justify-between font-sans">
           <div class="flex items-center space-x-2 text-xs">
-            <button onclick="navigateCase(-1)" class="px-3 py-2 rounded-xl bg-surface-800 hover:bg-surface-750 text-gray-300 border border-gray-700 transition">
+            <button onclick="navigateCase(-1)" class="px-3.5 py-2 rounded-full bg-acadza-card hover:bg-acadza-cardHover text-slate-300 border border-acadza-border transition">
               ← Prev (K)
             </button>
-            <button onclick="navigateCase(1)" class="px-3 py-2 rounded-xl bg-surface-800 hover:bg-surface-750 text-gray-300 border border-gray-700 transition">
+            <button onclick="navigateCase(1)" class="px-3.5 py-2 rounded-full bg-acadza-card hover:bg-acadza-cardHover text-slate-300 border border-acadza-border transition">
               Next (J) →
             </button>
           </div>
 
           <div class="flex items-center space-x-3">
-            <button onclick="recordDecision('REJECTED')" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-rose-900/30 text-rose-300 border border-rose-800/50 hover:bg-rose-900/50 transition">
+            <button onclick="recordDecision('REJECTED')" class="px-4 py-2.5 rounded-full text-xs font-bold bg-rose-950/50 text-rose-300 border border-rose-800/60 hover:bg-rose-900/70 transition">
               Reject / Dismiss (R)
             </button>
-            <button onclick="recordDecision('EDITED')" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-800/50 hover:bg-indigo-900/50 transition">
+            <button onclick="recordDecision('EDITED')" class="px-4 py-2.5 rounded-full text-xs font-bold bg-acadza-card text-acadza-amber border border-acadza-amber/40 hover:bg-acadza-cardHover transition">
               Modify Fix (E)
             </button>
-            <button onclick="recordDecision('APPROVED')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition flex items-center space-x-1.5">
+            <button onclick="recordDecision('APPROVED')" class="px-5 py-2.5 rounded-full text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 transition flex items-center space-x-1.5">
               <span>✓ Approve & Apply (A)</span>
             </button>
           </div>
@@ -658,7 +693,7 @@ html_template = """<!DOCTYPE html>
         reportCount: current.reportCount,
         studentReplySent: replyText,
         notes: notes,
-        reviewer: "Faculty_SME_Physics_01",
+        reviewer: "Faculty_SME_01",
         timestamp: new Date().toISOString()
       });
 
@@ -675,18 +710,18 @@ html_template = """<!DOCTYPE html>
     function renderBonusScanner() {
       const container = document.getElementById('bonus-container');
       container.innerHTML = BONUS_DATA.map((b, i) => `
-        <div class="bg-surface-900 p-5 rounded-xl border border-indigo-500/30 space-y-3">
+        <div class="bg-acadza-navy p-5 rounded-2xl border border-acadza-border hover:border-acadza-amber/40 transition space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-mono font-bold text-indigo-300">QID: ${b.questionId.substring(0, 8)}...</span>
-            <span class="text-[10px] px-2 py-0.5 rounded font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">${b.defect_type}</span>
+            <span class="text-xs font-mono font-bold text-acadza-amber">QID: ${b.questionId.substring(0, 8)}...</span>
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full font-mono bg-acadza-card text-blue-300 border border-acadza-border">${b.defect_type}</span>
           </div>
-          <div class="text-xs text-gray-300">${b.subject} • ${b.chapter}</div>
-          <p class="text-xs text-gray-200 bg-surface-850 p-2.5 rounded-lg border border-gray-800">${b.detail}</p>
-          <div class="text-[11px] font-mono text-gray-400 bg-surface-850 p-2.5 rounded-lg border border-gray-800 space-y-1">
+          <div class="text-xs text-slate-300 font-sans font-bold">${b.subject} • ${b.chapter}</div>
+          <p class="text-xs text-slate-300 bg-acadza-surface p-3 rounded-xl border border-acadza-border leading-relaxed">${b.detail}</p>
+          <div class="text-[11px] font-mono text-slate-400 bg-acadza-surface p-3 rounded-xl border border-acadza-border space-y-1">
             <div class="text-rose-400 text-[10px]">Find: ${escapeHtml(b.surgical_fix.find)}</div>
             <div class="text-emerald-400 text-[10px]">Replace: ${escapeHtml(b.surgical_fix.replace)}</div>
           </div>
-          <button onclick="applyBonusFix('${b.questionId}', '${b.defect_type}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition">
+          <button onclick="applyBonusFix('${b.questionId}', '${b.defect_type}')" class="w-full py-2.5 bg-acadza-blue hover:bg-blue-600 text-white rounded-full text-xs font-sans font-bold transition shadow-sm">
             Auto-Apply Latent Fix
           </button>
         </div>
@@ -699,7 +734,7 @@ html_template = """<!DOCTYPE html>
         questionId: qid,
         reportCount: 0,
         notes: `Proactive latent fix applied for ${type} before student discovery`,
-        reviewer: "Automated_Autonomous_Auditor",
+        reviewer: "Autonomous_Shadow_Auditor",
         timestamp: new Date().toISOString()
       });
       alert(`Latent defect on question ${qid} has been surgically repaired!`);
@@ -746,6 +781,6 @@ with open("acadza-report-fix/console/index.html", "w", encoding="utf-8") as f:
 with open("acadza-report-fix/index.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-print("Generated standalone interactive console at:")
+print("Generated Acadza-branded spherical console at:")
 print("1. acadza-report-fix/console/index.html")
-print("2. acadza-report-fix/index.html (ready for zero-config Vercel/Netlify deployment!)")
+print("2. acadza-report-fix/index.html")

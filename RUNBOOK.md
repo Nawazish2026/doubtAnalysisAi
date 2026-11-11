@@ -72,3 +72,4 @@ Push the repository to GitHub, go to **Settings → Pages**, select **Deploy fro
 - [x] **`PROMPTS.md`**: Complete prompt registry, evolution history, 3 AI failure modes & fixes, design decisions log.
 - [x] **`PRODUCT.md`**: 1-page executive manifesto on student impact, safety boundaries, Week 1 metrics, and the Shadow Solver pitch.
 - [x] **Bonus Discovery**: 2 latent defects identified in unreported questions (`bonus_defects.json`).
+

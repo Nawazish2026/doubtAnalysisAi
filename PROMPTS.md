@@ -233,3 +233,4 @@ Below are verbatim excerpts of the key strategic prompts used to direct our codi
 * **Context:** Many LLM systems regenerate question records in full.
 * **Decision:** Enforced a zero-rewrite policy where patches must be strict substring replacements (`{field, find, replace}`).
 * **Why:** In production databases, re-serializing HTML with MathML leads to encoding drift, broken LaTeX entities, and corrupted inline styling. Surgical edits are auditable, reversible, and mathematically safe.
+
