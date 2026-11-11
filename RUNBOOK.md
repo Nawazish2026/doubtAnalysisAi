@@ -68,8 +68,13 @@ Push the repository to GitHub, go to **Settings → Pages**, select **Deploy fro
 ---
 
 ## Deliverables Checklist
-- [x] **`results.json`**: 44 triaged reports passing 100% of taxonomy schema and invariant checks.
+- [x] **`results.json`**: Precomputed triage output for all 44 supplied reports. Run the engine locally to regenerate and validate it.
 - [x] **Faculty Review Console**: Responsive web app with MathML, diff view, audit log, urgency queue.
-- [x] **`PROMPTS.md`**: Complete prompt registry, evolution history, 3 AI failure modes & fixes, design decisions log.
-- [x] **`PRODUCT.md`**: 1-page executive manifesto on student impact, safety boundaries, Week 1 metrics, and the Shadow Solver pitch.
+- [x] **`PROMPTS.md`**: Proposed (not runtime-executed) LLM prompt templates, selected coding-assistant prompts, three implementation mistakes and the design decisions log.
+- [x] **`PRODUCT.md`**: One-page product note on student impact, safe automation boundaries, a Week 1 metric and pre-flight audit idea.
 - [x] **Bonus Discovery**: 2 latent defects identified in unreported questions (`bonus_defects.json`).
+
+
+## Submission / implementation boundary
+
+See SUBMISSION.md for the final submission links, required-file checklist, recruiter questions and email draft. The original static console remains a precomputed assignment demo; its audit entries are browser-local and its decisions do not mutate the question bank. The separate FastAPI/Supabase backend foundation is not yet verified end-to-end with the static console. See PROMPTS.md and README.md for the exact limitations.
