@@ -17,7 +17,14 @@ async def main():
     if not database_url:
         raise RuntimeError("Set DATABASE_URL in backend/.env before seeding")
 
-    pool = await asyncpg.create_pool(\n        database_url, min_size=0, max_size=1, ssl="require",\n        statement_cache_size=0, command_timeout=60,\n    )
+    pool = await asyncpg.create_pool(
+        database_url,
+        min_size=0,
+        max_size=1,
+        ssl="require",
+        statement_cache_size=0,
+        command_timeout=60,
+    )
     try:
         questions = json.loads((ROOT / "data/questions.json").read_text(encoding="utf-8"))
         reports = json.loads((ROOT / "data/reports.json").read_text(encoding="utf-8"))
