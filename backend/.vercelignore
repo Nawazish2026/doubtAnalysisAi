@@ -1,0 +1,8 @@
+# Backend project-level ignore file.
+# Important: do not ignore requirements.txt, pyproject.toml, or data/taxonomy.json.
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+tests/
