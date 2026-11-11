@@ -7,7 +7,7 @@ create table if not exists public.demo_report_allowlist (
 
 insert into public.demo_report_allowlist (external_report_id)
 select 'R' || lpad(n::text, 3, '0')
-from generate_series(1, 44) as n
+from generate_series(1, 44) as series(n)
 where exists (
     select 1 from public.reports r
     where r.external_report_id = 'R' || lpad(n::text, 3, '0')
