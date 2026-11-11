@@ -1,3 +1,4 @@
+import os
 import json
 from collections.abc import AsyncIterator
 
@@ -23,11 +24,19 @@ async def _init_connection(connection: asyncpg.Connection) -> None:
 
 
 async def create_pool(database_url: str) -> asyncpg.Pool:
+    # Vercel runs this API as a serverless function. Keep each warm instance
+    # to one DB connection and disable prepared-statement caching so Supabase's
+    # transaction pooler (port 6543) can safely serve short-lived invocations.
+    on_vercel = os.getenv("VERCEL") == "1"
+    pool_size = 1 if on_vercel else 5
+
     return await asyncpg.create_pool(
         dsn=database_url,
-        min_size=1,
-        max_size=10,
+        min_size=0 if on_vercel else 1,
+        max_size=pool_size,
         command_timeout=30,
+        ssl="require",
+        statement_cache_size=0,
         init=_init_connection,
     )
 
