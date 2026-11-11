@@ -6,3 +6,10 @@ __pycache__/
 node_modules/
 dist/
 
+# Local backend configuration and environments
+backend/.env
+backend/.venv/
+frontend/config.js
+__pycache__/
+.pytest_cache/
+*.py[cod]
