@@ -118,3 +118,60 @@ Top submissions get a 30-minute call where we'll change a requirement live and w
 Questions? Reply to the email. Good luck. We're excited to see what you build.
 
 *Acadza Technologies*
+---
+
+## Submission implementation notes
+
+### What is implemented in this repository
+
+- engine/triage_engine.py: deterministic, fixture-specific triage rules and taxonomy/edit validation. It does not call an LLM at runtime.
+- results.json: precomputed output for all 44 supplied reports.
+- engine/prepare_console_data.py: groups reports by question, ranks cases with a heuristic urgency score, and creates before/after preview data.
+- index.html and console/index.html: static faculty-review demo with native browser MathML rendering, filters, search, a student reply preview, diff display, keyboard shortcuts, and a bonus scanner.
+- bonus_defects.json: two candidate issues found in questions with no matching student report; confirm with a subject expert before changing production content.
+- PROMPTS.md: proposed LLM prompts (not currently executed), selected coding-assistant prompts, three implementation mistakes and the design log.
+- PRODUCT.md: one-page product note.
+
+### Results summary
+
+The committed results.json contains 44 records:
+- 26 defect
+- 13 no_error
+- 2 display_issue
+- 1 app_issue
+- 1 language_mode
+- 1 not_actionable
+
+Routes in the precomputed file:
+- 21 auto_apply candidates
+- 5 faculty_review
+- 18 no_change
+
+auto_apply in this fixture output is a triage route/candidate, not proof that the static demo wrote a correction to a production question bank.
+
+### Run locally
+
+From the repository root:
+
+    python3 engine/triage_engine.py
+    python3 engine/prepare_console_data.py
+    python3 engine/build_console.py
+    python3 -m http.server 3000
+
+Open http://localhost:3000.
+
+### Important limitations
+
+- Triage is deterministic and specific to the supplied 44-report fixture. It is not a general-purpose LLM orchestrator.
+- The console renders precomputed results; it does not infer new reports at runtime.
+- The demo audit drawer uses browser localStorage. It is not shared between faculty accounts or devices.
+- Approve/edit/reject in the static demo records the decision in the local browser; it does not mutate the source question bank.
+- The separate backend/ FastAPI/Supabase foundation is not yet verified end-to-end with this static console. Do not describe multi-user realtime updates or production database correction as working until independently tested.
+
+### Demo links supplied for this submission
+
+- Repository: https://github.com/Nawazish2026/doubtAnalysisAi
+- Faculty console: https://doubt-analysis-ai.vercel.app/
+- Loom walkthrough: https://www.loom.com/share/ee4022a8444749cc861cc0cbb01175ed
+
+The assignment email asks for a three-minute recording. The currently supplied Loom link was prepared as a shorter two-minute walkthrough; record a three-minute version before final submission if time permits.
