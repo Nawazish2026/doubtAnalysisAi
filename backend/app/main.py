@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 
-import asyncpg
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +10,10 @@ from app.routers import audit, questions, reports, reviews
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not settings.database_url:
+        raise RuntimeError("DATABASE_URL is missing. Copy backend/.env.example to backend/.env.")
+    if not settings.supabase_url:
+        raise RuntimeError("SUPABASE_URL is missing. Configure backend/.env.")
     app.state.pool = await create_pool(settings.database_url)
     try:
         yield
@@ -41,7 +44,7 @@ app.include_router(audit.router)
 
 @app.get("/api/health", tags=["Health"])
 async def health():
-    return {"ok": True, "service": "ac adza-api"}
+    return {"ok": True, "service": "acadza-api"}
 
 
 @app.get("/", include_in_schema=False)
