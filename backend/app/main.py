@@ -45,7 +45,7 @@ app.include_router(audit.router)
 @app.get("/api/health", tags=["Health"])
 async def health(db=Depends(get_db)):
     await db.fetchval("select 1")
-    return {"ok": True, "service": "ac adza-api", "database": "connected"}
+    return {"ok": True, "service": "acadza-api", "database": "connected"}
 
 
 @app.get("/", include_in_schema=False)
