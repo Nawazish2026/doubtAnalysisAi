@@ -65,6 +65,16 @@ Never let public signup metadata choose a role. Keep at least one separately con
 Copy frontend/config.example.js to frontend/config.js and set apiBaseUrl, supabaseUrl and supabasePublishableKey. Serve repository root with python3 -m http.server 3000. Open http://127.0.0.1:3000/frontend/live-console.html and sign in with the faculty account.
 The static root index.html remains the original demo. It has not been replaced or automatically switched to live mode.
 
+## 7. Public shared demo actions (no login)
+
+The root `/index.html` review console uses the public demo API for its Reject, Save Edited Fix and Approve buttons. Apply `backend/migrations/003_public_demo_actions.sql` in the Supabase SQL Editor **after** the demo fixtures have been seeded. It allowlists only the seeded `R001`–`R044` report IDs that exist at migration time and creates a separate audit stream for public demo actions.
+
+The public API is:
+- `GET /api/demo/state`: reads only allowlisted demo questions, reports, proposals and actions.
+- `POST /api/demo/decisions`: saves edited proposals, approves validated exact-match changes, or rejects demo reports.
+
+The endpoint has no login by design. Anyone with access to the public site can change this shared demonstration dataset. The API is rate-limited and cannot mutate reports that are not in `demo_report_allowlist`. Keep real student/production reports out of that table. Production review endpoints remain authenticated.
+
 ## API endpoints
 POST /api/reports
 GET /api/reports

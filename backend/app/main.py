@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.db import create_pool, get_db
-from app.routers import audit, questions, reports, reviews
+from app.routers import audit, demo, questions, reports, reviews
 
 
 @asynccontextmanager
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Acadza Report → Fix API",
     version="1.0.0",
-    description="Authenticated API for question reports, faculty review and audited corrections.",
+    description="Authenticated production API plus allowlisted public demo actions for the seeded fixture dataset.",
     lifespan=lifespan,
 )
 
@@ -37,6 +37,7 @@ app.add_middleware(
 )
 
 app.include_router(reports.router)
+app.include_router(demo.router)
 app.include_router(questions.router)
 app.include_router(reviews.router)
 app.include_router(audit.router)

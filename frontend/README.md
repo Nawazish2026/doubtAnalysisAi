@@ -59,6 +59,12 @@ python3 -m http.server 3000
 
 Open `http://127.0.0.1:3000/frontend/live-console.html`.
 
+## Public demo review actions (no login)
+
+The root `/` dashboard is now connected to the Supabase-backed public demo API. Its Reject / Dismiss, Save Edited Fix and Approve buttons write to the database; question changes are versioned, proposals and decisions are recorded, and the dashboard refreshes its view and audit history from the database. Apply `backend/migrations/003_public_demo_actions.sql` in Supabase SQL Editor after running the demo seed script.
+
+No login is required for this shared demo. Public write access is restricted server-side to the fixture report IDs `R001`–`R044` present when the allowlist migration runs. Any visitor can alter those shared demo records, so do not add real student reports to this allowlist. The separate `/frontend/live-console.html` remains the authenticated faculty workflow for non-demo records.
+
 ## Realtime and write flow
 
 - Supabase Auth provides the user's access token.
