@@ -130,11 +130,9 @@
       </div>
 
       <div class="ml-auto flex flex-none items-center gap-1.5 xl:gap-2 font-sans pr-1 whitespace-nowrap">
-        <a href="/frontend/live-console.html"
-          class="px-3.5 py-1.5 rounded-full text-xs font-bold text-cyan-200 bg-cyan-950/60 border border-cyan-700/60 hover:bg-cyan-900/70 transition"
-          title="Open the Supabase-backed faculty console">
-          Live Backend ↗
-        </a>
+        <span id="demo-db-status" class="px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-200 bg-amber-950/50 border border-amber-700/60" aria-live="polite">
+          Connecting to Supabase…
+        </span>
         <button id="btn-tab-review" onclick="switchMainTab('review')" 
           class="px-4 py-1.5 rounded-full text-xs font-bold bg-acadza-blue hover:bg-blue-600 text-white shadow-glow-blue transition">
           Review Queue
@@ -261,7 +259,7 @@
         No actions recorded yet. Approve, Edit or Dismiss cases to log audit history.
       </div>
     </div>
-    <p class="px-5 pb-3 text-[10px] text-slate-500">This audit log is local to this browser and is not a server-side record.</p>
+    <p class="px-5 pb-3 text-[10px] text-slate-500">Actions and audit history are persisted in the Supabase demo database.</p>
 
     <div class="p-5 border-t border-acadza-border bg-acadza-navy flex items-center justify-between font-sans">
       <button onclick="exportAuditLog()" class="px-4 py-2 rounded-full text-xs font-bold bg-acadza-card hover:bg-acadza-cardHover text-slate-200 border border-acadza-border transition flex items-center space-x-2">
@@ -278,12 +276,100 @@
     const BONUS_DATA = [{"questionId": "68dea87d387eea3d0d95fbe3", "defect_type": "markup_leak", "subject": "Physics", "chapter": "Electrostatics", "detail": "Unescaped raw MathML tags (\u003cmspace linebreak=\"newline\"\u003e) leaking in options HTML text.", "surgical_fix": {"field": "question", "find": "\u003cmspace linebreak=\"newline\"\u003e", "replace": ""}}, {"questionId": "68dea657387eea3d0d95f54a", "defect_type": "notation", "subject": "Physics", "chapter": "Geometrical optics and optical instruments", "detail": "OCR typo in solution text: 'P_{eqch}' and 'P_{eqcu}' instead of 'P_{each}'.", "surgical_fix": {"field": "solution", "find": "P_{eqch}", "replace": "P_{each}"}}];
   </script>
 
+  <script src="/api/config"></script>
   <script>
     let activeIndex = 0;
     let filterRoute = 'all';
     let filterSubject = 'all';
     let searchQuery = '';
-    let auditLog = JSON.parse(localStorage.getItem('acadza_audit_log') || '[]');
+    let auditLog = [];
+    let demoState = { questions: [], reports: [], proposals: [], actions: [] };
+
+    function demoApiBase() {
+      return (window.ACADZA_CONFIG?.apiBaseUrl || "https://doubt-analysis-ai-e8rm.vercel.app").replace(/\/+$/, "");
+    }
+
+    function setDemoStatus(message, isError = false) {
+      const badge = document.getElementById("demo-db-status");
+      if (!badge) return;
+      badge.textContent = message;
+      badge.className = isError
+        ? "px-3.5 py-1.5 rounded-full text-xs font-bold text-rose-200 bg-rose-950/60 border border-rose-700/60"
+        : "px-3.5 py-1.5 rounded-full text-xs font-bold text-emerald-200 bg-emerald-950/60 border border-emerald-700/60";
+    }
+
+    async function syncDemoState() {
+      try {
+        const response = await fetch(demoApiBase() + "/api/demo/state", {
+          method: "GET",
+          cache: "no-store"
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || "Could not load Supabase demo state.");
+
+        demoState = payload;
+        const questionById = new Map((demoState.questions || []).map((row) => [row.question_id, row]));
+        const reportByQuestion = new Map();
+        for (const report of (demoState.reports || [])) {
+          if (!reportByQuestion.has(report.question_id)) reportByQuestion.set(report.question_id, []);
+          reportByQuestion.get(report.question_id).push(report);
+        }
+
+        for (const item of CONSOLE_DATA) {
+          const stored = questionById.get(item.questionId);
+          if (stored?.content) {
+            item.rawQuestionHtml = stored.content.question ?? item.rawQuestionHtml;
+            item.rawSolutionHtml = stored.content.solution ?? item.rawSolutionHtml;
+            item.storedAnswer = stored.content.answer ?? item.storedAnswer;
+            item.dbVersion = stored.version;
+          }
+
+          const related = reportByQuestion.get(item.questionId) || [];
+          if (related.length) {
+            const states = related.map((row) => row.status);
+            if (states.every((value) => value === "rejected")) item.reviewStatus = "REJECTED";
+            else if (states.every((value) => value === "corrected")) item.reviewStatus = "CORRECTED";
+            else if (states.every((value) => value === "approved")) item.reviewStatus = "APPROVED";
+            else if (states.some((value) => ["rejected", "corrected", "approved"].includes(value))) item.reviewStatus = "PARTIAL";
+            else item.reviewStatus = "PENDING";
+
+            const ids = new Set(related.map((row) => row.report_id));
+            const pending = (demoState.proposals || []).filter((row) =>
+              ids.has(row.report_id) && row.status === "pending"
+            ).slice(-1)[0];
+            if (pending?.edit) {
+              item.primaryTriage.repair = pending.repair;
+              item.diff = {
+                field: pending.edit.field,
+                find: pending.edit.find,
+                replace: pending.edit.replace,
+                before: pending.edit.find,
+                after: pending.edit.replace
+              };
+            } else if (["REJECTED", "CORRECTED", "APPROVED"].includes(item.reviewStatus)) {
+              item.diff = null;
+            }
+          }
+        }
+
+        auditLog = (demoState.actions || []).map((entry) => ({
+          action: entry.action === "approved" ? "APPROVED" : entry.action === "rejected" ? "REJECTED" : "EDITED",
+          questionId: entry.question_id,
+          reportId: entry.report_id,
+          reviewer: entry.actor_label || "Public demo",
+          notes: entry.reason || (entry.action === "edited" ? "Edited fix saved to Supabase" : "Decision saved to Supabase"),
+          timestamp: entry.created_at
+        }));
+        updateAuditUI();
+        renderQueue();
+        setDemoStatus("Supabase Connected · Saved live");
+        return true;
+      } catch (error) {
+        setDemoStatus("Supabase Offline", true);
+        console.error("Acadza demo sync failed:", error);
+        return false;
+      }
+    }
 
     function saveAudit(entry) {
       auditLog.unshift(entry);
@@ -326,11 +412,8 @@
     }
 
     function clearAuditLog() {
-      if (confirm('Clear all audit entries from this browser session?')) {
-        auditLog = [];
-        localStorage.removeItem('acadza_audit_log');
-        updateAuditUI();
-      }
+      alert("Supabase demo audit history is retained as an immutable record and cannot be cleared from this public console.");
+      syncDemoState();
     }
 
     function exportAuditLog() {
@@ -511,7 +594,8 @@
             </div>
           </div>
           <div>
-            ${routePill}
+${routePill}
+            ${item.reviewStatus ? '<span class="ml-2 text-[10px] px-2 py-1 rounded-full border border-cyan-700/60 bg-cyan-950/50 text-cyan-200">DB: ' + escapeHtml(item.reviewStatus) + '</span>' : ''}
           </div>
         </div>
 
@@ -638,40 +722,66 @@
       );
     }
 
-    function recordDecision(action) {
-      if (!['APPROVED', 'EDITED', 'REJECTED'].includes(action)) {
-        throw new Error(`Unsupported decision: ${action}`);
+    async function recordDecision(action) {
+      if (!["APPROVED", "EDITED", "REJECTED"].includes(action)) {
+        throw new Error("Unsupported decision: " + action);
       }
 
       const items = getFilteredItems();
       const current = items[activeIndex];
       if (!current) return;
 
-      const replyText = document.getElementById('student-reply-editor').value;
-      const proposedEdit = current.diff
-        ? {
-            field: current.diff.field,
-            find: current.diff.find,
-            replace: action === 'EDITED'
-              ? document.getElementById('proposed-edit-value').value
-              : current.diff.replace
-          }
-        : null;
-      const notes = prompt(`Faculty comments for ${action} decision (optional):`, `Action ${action} confirmed by faculty`);
+      const notes = prompt(
+        "Faculty comments for " + action + " decision (optional):",
+        "Action " + action + " recorded in the public Acadza demo"
+      );
+      const body = {
+        question_id: current.questionId,
+        action: action === "APPROVED" ? "approve" : action === "EDITED" ? "save_edit" : "reject",
+        reason: notes || null,
+        student_reply: document.getElementById("student-reply-editor")?.value || null
+      };
 
-      saveAudit({
-        action: action,
-        questionId: current.questionId,
-        reportCount: current.reportCount,
-        studentReplySent: replyText,
-        proposedEdit: proposedEdit,
-        notes: notes,
-        reviewer: "Faculty_SME_01",
-        timestamp: new Date().toISOString()
-      });
+      if (action === "EDITED" || (action === "APPROVED" && current.diff)) {
+        if (!current.diff) {
+          alert("There is no proposed edit to save for this case.");
+          return;
+        }
+        const replacement = action === "EDITED"
+          ? document.getElementById("proposed-edit-value")?.value
+          : (document.getElementById("proposed-edit-value")?.value ?? current.diff.after ?? current.diff.replace);
+        body.repair = current.primaryTriage.repair;
+        body.edit = {
+          field: current.diff.field,
+          find: current.diff.find,
+          replace: replacement
+        };
+      }
 
-      alert(`Decision logged in this browser: ${action} for QID: ${current.questionId}. No question data was changed.`);
-      navigateCase(1);
+      setDemoStatus("Saving to Supabase…");
+      try {
+        const response = await fetch(demoApiBase() + "/api/demo/decisions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || "Supabase could not save this action.");
+
+        await syncDemoState();
+        const message = action === "EDITED"
+          ? "Edited fix saved to Supabase as a pending proposal."
+          : action === "REJECTED"
+            ? "Reject / Dismiss decision saved to Supabase."
+            : payload.question_changed
+              ? "Approved. The corrected question is now saved in Supabase (version " + payload.new_version + ")."
+              : "Approval decision saved to Supabase. Question content was not changed.";
+        alert(message);
+        navigateCase(1);
+      } catch (error) {
+        setDemoStatus("Save failed", true);
+        alert(error.message || "Unable to save this action.");
+      }
     }
 
     function navigateCase(delta) {
@@ -763,6 +873,8 @@
 
     renderQueue();
     updateAuditUI();
+    syncDemoState();
+    setInterval(syncDemoState, 15000);
   </script>
 </body>
 </html>
