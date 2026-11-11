@@ -54,8 +54,8 @@ async def create_report(
         {"status": "faculty_review", "question_id": body.question_id},
         {"source": body.source},
     )
-    # Intentionally route new live reports to faculty. The current triage engine
-    # contains assignment-specific rules and is not a general-purpose classifier.
+    # The current triage engine has assignment-specific report-ID rules. New live
+    # reports are routed to faculty until a generalized classifier is validated.
     return {"id": str(report["id"]), "status": report["status"], "triage": "manual_review"}
 
 
@@ -125,7 +125,9 @@ async def faculty_queue(
                q.question_type,q.subject,q.chapter,q.level,q.content,q.version,
                t.verdict,t.repair as triage_repair,t.route,t.confidence,t.evidence,
                t.student_reply,t.edit as triage_edit,
-               p.id as proposal_id,p.repair,p.edit,p.status as proposal_status,
+               coalesce(p.repair,t.repair) as repair,
+               coalesce(p.edit,t.edit) as edit,
+               p.id as proposal_id,p.status as proposal_status,
                p.base_question_version
         from public.reports r
         join public.questions q on q.id=r.question_id
