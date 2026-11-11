@@ -874,7 +874,7 @@ ${routePill}
     renderQueue();
     updateAuditUI();
     syncDemoState();
-    setInterval(syncDemoState, 15000);
+    setInterval(() => {\n      if (!document.activeElement?.matches("input, textarea, select")) syncDemoState();\n    }, 15000);
   </script>
 </body>
 </html>
