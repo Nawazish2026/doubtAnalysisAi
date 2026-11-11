@@ -1,16 +1,22 @@
 """Import the repository's anonymized fixture JSON into a fresh database."""
 import asyncio
 import json
+import os
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
 import asyncpg
+from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT / "backend" / ".env")
 
 
 async def main():
-    database_url = __import__("os").environ["DATABASE_URL"]
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("Set DATABASE_URL in backend/.env before seeding")
+
     pool = await asyncpg.create_pool(database_url, min_size=1, max_size=3)
     try:
         questions = json.loads((ROOT / "data/questions.json").read_text(encoding="utf-8"))
@@ -25,10 +31,10 @@ async def main():
                     await db.execute(
                         """insert into public.questions
                            (id,question_type,subject,chapter,level,content)
-                           values ($1,$2,$3,$4,$5,$6)
+                           values ($1,$2,$3,$4,$5,$6::jsonb)
                            on conflict (id) do nothing""",
                         q["_id"], qtype, q.get("subject"), q.get("chapter"),
-                        q.get("level"), content,
+                        q.get("level"), json.dumps(content),
                     )
 
                 report_ids = {}
@@ -54,12 +60,13 @@ async def main():
                     await db.execute(
                         """insert into public.triage_results
                            (report_id,verdict,repair,edit,route,confidence,evidence,student_reply,engine_version)
-                           select $1,$2,$3,$4,$5,$6,$7,$8,'fixture-results-v1'
+                           select $1,$2,$3,$4::jsonb,$5,$6,$7,$8,'fixture-results-v1'
                            where not exists (
                              select 1 from public.triage_results where report_id=$1
                            )""",
                         report_ids[rid], result["verdict"], result.get("repair"),
-                        result.get("edit"), result["route"], result.get("confidence"),
+                        json.dumps(result.get("edit")) if result.get("edit") is not None else None,
+                        result["route"], result.get("confidence"),
                         result.get("evidence"), result.get("student_reply"),
                     )
         print(f"Imported {len(questions)} questions, {len(reports)} reports, {len(results)} triage results.")
