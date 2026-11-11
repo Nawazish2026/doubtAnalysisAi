@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.db import create_pool, get_db
-from app.routers import audit, questions, reports, reviews
+from app.routers import audit, demo, questions, reports, reviews
 
 
 @asynccontextmanager
@@ -37,6 +37,7 @@ app.add_middleware(
 )
 
 app.include_router(reports.router)
+app.include_router(demo.router)
 app.include_router(questions.router)
 app.include_router(reviews.router)
 app.include_router(audit.router)
