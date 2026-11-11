@@ -171,7 +171,9 @@ Open http://localhost:3000.
 ### Demo links supplied for this submission
 
 - Repository: https://github.com/Nawazish2026/doubtAnalysisAi
-- Faculty console: https://doubt-analysis-ai.vercel.app/
+- Faculty console (frontend): https://doubt-analysis-ai.vercel.app/
+- FastAPI backend/API origin: https://doubt-analysis-ai-e8rm.vercel.app/ (its root intentionally returns JSON; see /docs)
+- Deployment setup: VERCEL_DEPLOYMENT.md
 - Loom walkthrough: https://www.loom.com/share/ee4022a8444749cc861cc0cbb01175ed
 
 The assignment email asks for a three-minute recording. The currently supplied Loom link was prepared as a shorter two-minute walkthrough; record a three-minute version before final submission if time permits.
